@@ -254,9 +254,10 @@ public class UserService {
     private String handleSilentAuth(String urlMobile, String requestId) {
         if (urlMobile == null) return null;
 
-        String newUrl = url1 + clientCallbackUri + "&client_id=" + clientId
-                + "&scope=openid ip:phone_verify&state=" + requestId
-                + "&login_hint=" + urlMobile;
+        String newUrl = url1 + clientCallbackUri;
+//        + "&client_id=" + clientId
+//                + "&scope=openid ip:phone_verify&state=" + requestId
+//                + "&login_hint=" + urlMobile;
 //        String newUrl = null;
         log.info("Generated Silent Auth URL: {}", newUrl);
 
