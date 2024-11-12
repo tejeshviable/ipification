@@ -16,13 +16,25 @@ spring:
     url: jdbc:mysql://localhost:3306/ioh
     username: root
     password: admin
+spring:
+  redis:
+    host: localhost
+    port: 6379
+  main:
+    allow-bean-definition-overriding: true
+  datasource:
+    url: jdbc:mysql://localhost:3306/ioh
+    username: root
+    password: admin
   jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
     hibernate:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-        format_sql: true
-        auto_quote_keyword: false
-        dialect: org.hibernate.dialect.MySQLDialect
+    show-sql: true
+    format_sql: true
 
 
 url:
