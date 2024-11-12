@@ -20,6 +20,12 @@ public class UserController {
     public ResponseEntity<?> generateUrl(@RequestBody MobileRequestDTO mobileRequestDTO){
         return new ResponseEntity<>(userService.generateUrl(mobileRequestDTO), HttpStatus.MOVED_TEMPORARILY);
     }
+    
+     */
+    /*@PostMapping("/generateUrl")
+    public ResponseEntity<?> generateUrl(@RequestBody MobileRequestDTO mobileRequestDTO){
+        return new ResponseEntity<>(userService.generateUrl(mobileRequestDTO), HttpStatus.MOVED_TEMPORARILY);
+    }
 */
     @GetMapping("/callback")
     @ResponseBody
