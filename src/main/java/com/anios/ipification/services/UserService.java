@@ -397,4 +397,19 @@ public class UserService {
         }
     }
 
+    public GenerateUrlResponseDTO generateUrl(MobileRequestDTO mobileRequestDTO)  {
+
+        GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
+
+        String requestId = UUID.randomUUID().toString();
+        String newUrl = url1+clientCallbackUri+"&client_id="+clientId+"&scope=openid ip:phone_verify&state="+requestId+"&login_hint="+ mobileRequestDTO.getMobileNumber();
+        generateUrlResponseDTO.setRequestId(requestId);
+        generateUrlResponseDTO.setRedirectionUrl(newUrl);
+        RedisDto redisDto = new RedisDto();
+        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
+        redisService.saveDataToRedis(mobileRequestDTO.getMobileNumber(),redisDto);
+
+        return generateUrlResponseDTO;
+    }
+
 }

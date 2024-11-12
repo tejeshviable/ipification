@@ -46,4 +46,9 @@ public class UserController {
         return new ResponseEntity<>(userService.authenticateUser(generateUrlRequestDTO, skipUrlGeneration), HttpStatus.MOVED_TEMPORARILY);
     }
 
+    @PostMapping("/generateUrl")
+    public ResponseEntity<?> generateUrl(@RequestBody MobileRequestDTO mobileRequestDTO){
+        return new ResponseEntity<>(userService.generateUrl(mobileRequestDTO), HttpStatus.MOVED_TEMPORARILY);
+    }
+
 }
