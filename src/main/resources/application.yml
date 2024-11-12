@@ -14,7 +14,7 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:mysql://172.17.0.3:3306/ioh
+    url: jdbc:mysql://172.17.0.2:3306/ioh
     username: root
     password: admin
   jpa:
@@ -30,7 +30,7 @@ spring:
 url:
   redirect: https://enatfqzw3yetv.x.pipedream.net/
   clientId: 5b4dcd2613944553b42124ab6d481619
-  client-callback-uri: http://3.235.246.199:7035/api/v1/ipification/callback
+  client-callback-uri: http://3.238.201.69:7035/api/v1/ipification/callback
   # Alternate callback URI:
   # client-callback-uri: http://localhost:8081/api/create/token
   code: ip:phone_verify
