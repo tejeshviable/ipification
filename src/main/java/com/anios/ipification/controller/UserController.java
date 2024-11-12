@@ -43,7 +43,7 @@ public class UserController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticateUser(@RequestParam("skipUrlGeneration") boolean skipUrlGeneration, @RequestBody GenerateUrlRequestDTO generateUrlRequestDTO){
-        return new ResponseEntity<>(userService.authenticateUser(generateUrlRequestDTO), HttpStatus.MOVED_TEMPORARILY);
+        return new ResponseEntity<>(userService.authenticateUser(generateUrlRequestDTO, skipUrlGeneration), HttpStatus.MOVED_TEMPORARILY);
     }
 
 }
