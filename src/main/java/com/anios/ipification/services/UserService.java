@@ -264,7 +264,7 @@ public class UserService {
     }
 
 
-    public Object authenticateUser(GenerateUrlRequestDTO generateUrlRequestDTO)  {
+    public Object authenticateUser(GenerateUrlRequestDTO generateUrlRequestDTO, boolean skipUrlGeneration)  {
 
         GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
         String urlMobile = null,smsMobile = null,whatsAppMobile = null;
@@ -275,6 +275,9 @@ public class UserService {
         String requestId = UUID.randomUUID().toString();
         workflow.setTxnId(requestId);
         workflow.setBrand(generateUrlRequestDTO.getBrand());
+
+        RedisDto redisDto = new RedisDto();
+        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
 
         if (generateUrlRequestDTO.getWorkflow() != null && !generateUrlRequestDTO.getWorkflow().isEmpty()) {
             for (GenerateUrlRequestDTO.WorkflowItem item : generateUrlRequestDTO.getWorkflow()) {
@@ -321,6 +324,7 @@ public class UserService {
                     log.info("SMS message not sent, trying next channel if available.");
                 }
                     else{
+                    redisService.saveDataToRedis(smsMobile,redisDto);
                         workflow.setFinalChannel("sms");
                         workflow.setStatus(true);
                         status = AuthenticationStatus.MESSAGE_SENT.name();
@@ -331,12 +335,16 @@ public class UserService {
             }
             else if (ChannelType.silent_auth.name().equals(channelName)) {
                 String url = handleSilentAuth(urlMobile, requestId);
+                if(skipUrlGeneration) {
+                    url = null;
+                }
                 if (url == null) {
                     status = AuthenticationStatus.URL_GENERATION_FAILED.name();
                     log.error("Silent auth URL generation failed, trying next channel if available.");
 
                 }
                 else{
+                    redisService.saveDataToRedis(urlMobile,redisDto);
                     workflow.setFinalChannel("silent_auth");
                     workflow.setStatus(true);
                     workflowRepo.save(workflow);
@@ -355,6 +363,8 @@ public class UserService {
                     status = AuthenticationStatus.MESSAGE_NOT_SENT.name();
                     log.error("WhatsApp message not sent to {}, trying next channel if available.", whatsAppMobile);
                 }else {
+                    redisService.saveDataToRedis(whatsAppMobile,redisDto);
+
                     workflow.setFinalChannel("whatsApp");
                     workflow.setStatus(true);
                     status = AuthenticationStatus.MESSAGE_SENT.name();
