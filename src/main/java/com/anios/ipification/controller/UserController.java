@@ -3,16 +3,14 @@ package com.anios.ipification.controller;
 import com.anios.ipification.requestDTO.GenerateUrlRequestDTO;
 import com.anios.ipification.requestDTO.MobileRequestDTO;
 import com.anios.ipification.requestDTO.RedisDto;
-import com.anios.ipification.responseDTO.GenerateUrlResponseDTO;
 import com.anios.ipification.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin
+@CrossOrigin(origins = " http://localhost:3000")
 @RequestMapping()
 public class UserController {
 
