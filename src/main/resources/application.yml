@@ -1,21 +1,12 @@
 server:
   port: 7035
   servlet:
-    contextPath: /api/v1/ipification
-    multipart:
-      enabled: true
-      max-file-size: 500MB
-      max-request-size: 500MB
-spring:
-  redis:
-    host: localhost
-    port: 6379
-  main:
-    allow-bean-definition-overriding: true
-  datasource:
-    url: jdbc:mysql://localhost:3306/ioh
-    username: root
-    password: admin
+    context-path: /api/v1/ipification
+  multipart:
+    enabled: true
+    max-file-size: 500MB
+    max-request-size: 500MB
+
 spring:
   redis:
     host: localhost
@@ -34,18 +25,19 @@ spring:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
     show-sql: true
-    format_sql: true
-
+    format-sql: true
 
 url:
   redirect: https://enatfqzw3yetv.x.pipedream.net/
   clientId: 5b4dcd2613944553b42124ab6d481619
   client-callback-uri: http://3.235.246.199:7035/api/v1/ipification/callback
-  #client-callback-uri: http://localhost:8081/api/create/token
+  # Alternate callback URI:
+  # client-callback-uri: http://localhost:8081/api/create/token
   code: ip:phone_verify
   callback: https://api.stage.ipification.com/auth/realms/ipification/protocol/openid-connect/auth?response_type=code&redirect_uri=
   clientSecret: ke2T4iTUXxaNjiESYqJKpcwUrqiCDTLG
-  #{{client-callback-uri}}&client_id={{client-id}}&scope=openid ip:phone_verify&state=IOHUniqueState001&login_hint=919884824837
+  # Example URL with dynamic callback and client ID:
+  # {{client-callback-uri}}&client_id={{client-id}}&scope=openid ip:phone_verify&state=IOHUniqueState001&login_hint=919884824837
 
 feign:
   token:
@@ -62,10 +54,6 @@ feign:
 infobip:
   api:
     key: b2d059315581169ed1bc034c58224c5b-11049afe-6528-4f5c-be1b-58209b28cd33
-  applicationId : EED4049FCD5F6CCF3764BCF9950E4181
-  messageId : 437F0187D517BABCF70F0F4A17B7CC22
-  from : 447491163443
-
-
-
-
+  applicationId: EED4049FCD5F6CCF3764BCF9950E4181
+  messageId: 437F0187D517BABCF70F0F4A17B7CC22
+  from: 447491163443
