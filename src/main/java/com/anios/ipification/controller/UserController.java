@@ -27,7 +27,7 @@ public class UserController {
         return new ResponseEntity<>(userService.generateUrl(mobileRequestDTO), HttpStatus.MOVED_TEMPORARILY);
     }
 */
-    @GetMapping("/callback")
+    @GetMapping("/callback1")
     @ResponseBody
     public ResponseEntity<?> handleRedirect(
             @RequestParam("code") String code,
@@ -37,6 +37,22 @@ public class UserController {
         // Log the received parameters
         System.out.println("Received code: " + code);
         System.out.println("Received state: " + state);
+        return new ResponseEntity<>(userService.saveVerificationStatus(code), HttpStatus.OK);
+    }
+
+    @GetMapping("/callback")
+    @ResponseBody
+    public ResponseEntity<?> handleRedirect(
+            @RequestParam(value = "code", required = false) String code,
+            @RequestParam(value = "state", required = false) String state,
+            @RequestParam(value = "error", required = false) String error,
+            @RequestParam(value = "error_description", required = false) String errorDescription) {
+
+        // Log the received parameters
+        System.out.println("Received code: " + code);
+        System.out.println("Received state: " + state);
+        System.out.println("Received error: " + error);
+        System.out.println("Received error_description: " + errorDescription);
         return new ResponseEntity<>(userService.saveVerificationStatus(code), HttpStatus.OK);
     }
 
