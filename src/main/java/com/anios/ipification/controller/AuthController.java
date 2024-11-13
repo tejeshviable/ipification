@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@CrossOrigin()
 @RequestMapping("/2fa")
 public class AuthController {
 

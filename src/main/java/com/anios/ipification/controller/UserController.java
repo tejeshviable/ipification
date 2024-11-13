@@ -10,13 +10,18 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@CrossOrigin
 @RequestMapping()
 public class UserController {
 
     @Autowired
     UserService userService;
 
+    /*@PostMapping("/generateUrl")
+    public ResponseEntity<?> generateUrl(@RequestBody MobileRequestDTO mobileRequestDTO){
+        return new ResponseEntity<>(userService.generateUrl(mobileRequestDTO), HttpStatus.MOVED_TEMPORARILY);
+    }
+    
+     */
     /*@PostMapping("/generateUrl")
     public ResponseEntity<?> generateUrl(@RequestBody MobileRequestDTO mobileRequestDTO){
         return new ResponseEntity<>(userService.generateUrl(mobileRequestDTO), HttpStatus.MOVED_TEMPORARILY);
