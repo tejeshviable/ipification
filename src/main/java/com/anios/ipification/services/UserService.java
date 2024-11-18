@@ -75,11 +75,13 @@ public class UserService {
     public RedisDto saveVerificationStatus(String code, String requestId, String error, String errorDescription) {
 
         if(error != null && !"".equals(error)) {
+            System.out.println("Received requestId in service: " + requestId);
             System.out.println("Received error in service: " + error);
             System.out.println("Received error_description in service: " + errorDescription);
 
             RedisDto redisDto = (RedisDto) redisService.getDataFromRedis(requestId);
             redisDto.setStatus("false");
+            redisDto.setErrorMsg(errorDescription);
             redisService.saveDataToRedis(requestId, redisDto);
 
             return RedisDto.builder().errorMsg(errorDescription).status("false").build();
