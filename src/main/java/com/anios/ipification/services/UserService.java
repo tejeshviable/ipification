@@ -156,7 +156,9 @@ public class UserService {
     }
     */public RedisDto saveVerificationStatus(String code, String error, String errorDescription) {
 
-        if(error == null || "".equals(error)) {
+        if(error != null && !"".equals(error)) {
+            System.out.println("Received error in service: " + error);
+            System.out.println("Received error_description in service: " + errorDescription);
             return RedisDto.builder().errorMsg(errorDescription).status("false").build();
         }
         MultiValueMap<String,String> values = new LinkedMultiValueMap<>();
