@@ -37,7 +37,7 @@ public class UserController {
         // Log the received parameters
         System.out.println("Received code: " + code);
         System.out.println("Received state: " + state);
-        return new ResponseEntity<>(userService.saveVerificationStatus(code), HttpStatus.OK);
+        return new ResponseEntity<>(userService.saveVerificationStatus(code, null, null), HttpStatus.OK);
     }
 
     @GetMapping("/callback")
@@ -53,7 +53,7 @@ public class UserController {
         System.out.println("Received state: " + state);
         System.out.println("Received error: " + error);
         System.out.println("Received error_description: " + errorDescription);
-        return new ResponseEntity<>(userService.saveVerificationStatus(code), HttpStatus.OK);
+        return new ResponseEntity<>(userService.saveVerificationStatus(code, error, errorDescription), HttpStatus.OK);
     }
 
     @GetMapping(value = "/status/{mobileNumber}")

@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -153,8 +154,11 @@ public class UserService {
         redisService.saveDataToRedis(urlMobile,redisDto);
         return ResponseEntity.ok(generateUrlResponseDTO);
     }
-    */public RedisDto saveVerificationStatus(String code) {
+    */public RedisDto saveVerificationStatus(String code, String error, String errorDescription) {
 
+        if(error == null || "".equals(error)) {
+            return RedisDto.builder().errorMsg(errorDescription).status("false").build();
+        }
         MultiValueMap<String,String> values = new LinkedMultiValueMap<>();
         values.add("code",code);
         values.add("grant_type","authorization_code");
@@ -191,18 +195,13 @@ public class UserService {
                 }
             }
         }
-        RedisDto dto = new RedisDto();
-        dto.setStatus("false");
-        return dto;
+        return RedisDto.builder().status("false").build();
     }
 
     public RedisDto getUserStatus(String mobileNumber) {
-        RedisDto redisDto;
         if(redisService.getDataFromRedis(mobileNumber) == null)
         {
-            redisDto = new RedisDto();
-            redisDto.setStatus("false");
-            return redisDto;
+            return RedisDto.builder().status("false").build();
         }
         return (RedisDto) redisService.getDataFromRedis(mobileNumber);
 
@@ -276,8 +275,7 @@ public class UserService {
         workflow.setTxnId(requestId);
         workflow.setBrand(generateUrlRequestDTO.getBrand());
 
-        RedisDto redisDto = new RedisDto();
-        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
+        RedisDto redisDto = RedisDto.builder().requestId(generateUrlResponseDTO.getRequestId()).build();
 
         if (generateUrlRequestDTO.getWorkflow() != null && !generateUrlRequestDTO.getWorkflow().isEmpty()) {
             for (GenerateUrlRequestDTO.WorkflowItem item : generateUrlRequestDTO.getWorkflow()) {
@@ -405,8 +403,7 @@ public class UserService {
         String newUrl = url1+clientCallbackUri+"&client_id="+clientId+"&scope=openid ip:phone_verify&state="+requestId+"&login_hint="+ mobileRequestDTO.getMobileNumber();
         generateUrlResponseDTO.setRequestId(requestId);
         generateUrlResponseDTO.setRedirectionUrl(newUrl);
-        RedisDto redisDto = new RedisDto();
-        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
+        RedisDto redisDto = RedisDto.builder().requestId(generateUrlResponseDTO.getRequestId()).build();
         redisService.saveDataToRedis(mobileRequestDTO.getMobileNumber(),redisDto);
 
         return generateUrlResponseDTO;
