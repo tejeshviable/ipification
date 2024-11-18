@@ -37,7 +37,7 @@ public class UserController {
         // Log the received parameters
         System.out.println("Received code: " + code);
         System.out.println("Received state: " + state);
-        return new ResponseEntity<>(userService.saveVerificationStatus(code, null, null), HttpStatus.OK);
+        return new ResponseEntity<>(userService.saveVerificationStatus(code, state, null, null), HttpStatus.OK);
     }
 
     @GetMapping("/callback")
@@ -53,12 +53,18 @@ public class UserController {
         System.out.println("Received state: " + state);
         System.out.println("Received error: " + error);
         System.out.println("Received error_description: " + errorDescription);
-        return new ResponseEntity<>(userService.saveVerificationStatus(code, error, errorDescription), HttpStatus.OK);
+        return new ResponseEntity<>(userService.saveVerificationStatus(code, state, error, errorDescription), HttpStatus.OK);
     }
 
     @GetMapping(value = "/status/{mobileNumber}")
     public ResponseEntity<RedisDto> getUserStatus(@PathVariable("mobileNumber") String mobileNumber){
         return new ResponseEntity<>(userService.getUserStatus(mobileNumber),HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/status/{mobileNumber}/{transactionId}")
+    public ResponseEntity<RedisDto> getUserStatus1(@PathVariable("mobileNumber") String mobileNumber,
+                                                   @PathVariable("transactionId") String transactionId){
+        return new ResponseEntity<>(userService.getUserStatus(mobileNumber, transactionId),HttpStatus.OK);
     }
 
     @PostMapping("/authenticate")

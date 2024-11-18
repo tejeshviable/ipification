@@ -72,93 +72,16 @@ public class UserService {
     @Autowired
     ChannelRepo channelRepo;
 
-
-
-    /*public Object generateUrl(GenerateUrlRequestDTO generateUrlRequestDTO)  {
-
-        GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
-        String urlMobile = null,smsMobile = null,whatsAppMobile = null;
-        String newUrl = null;
-        if (generateUrlRequestDTO.getWorkflow() != null && !generateUrlRequestDTO.getWorkflow().isEmpty()) {
-            for (GenerateUrlRequestDTO.WorkflowItem item : generateUrlRequestDTO.getWorkflow()) {
-                log.info("Processing item with channel: {}", item.getChannel());
-                if (ChannelType.sms.name().equals(item.getChannel())) {
-                    smsMobile = item.getMobileNumberTo();
-                    log.info("smsMobile {}",smsMobile);
-                }
-                else if (ChannelType.silent_auth.name().equals(item.getChannel())) {
-                    urlMobile = item.getMobileNumberTo();
-                    log.info("urlMobile {}",urlMobile);
-                }
-                else if (ChannelType.whatsApp.name().equals(item.getChannel())) {
-                    whatsAppMobile = item.getMobileNumberTo();
-                    log.info("whatsAppMobile {}",whatsAppMobile);
-
-                }
-            }
-        }
-
-        log.info("urlMobile {}",urlMobile);
-        log.info("smsMobile {}",smsMobile);
-        log.info("whatsAppMobile {}",whatsAppMobile);
-
-        String requestId = UUID.randomUUID().toString();
-
-            newUrl = url1 + clientCallbackUri + "&client_id=" + clientId + "&scope=openid ip:phone_verify&state=" + requestId + "&login_hint=" + urlMobile;
-            if (newUrl == null || newUrl.isEmpty()) {
-                //throw new Exception("Redirection URL generation failed.");
-                PinRequestDTO pinRequestDTO = new PinRequestDTO();
-                pinRequestDTO.setTo(smsMobile);
-                pinRequestDTO.setFrom(from);
-                pinRequestDTO.setMessageId(messageId);
-                pinRequestDTO.setApplicationId(applicationId);
-
-                Object smsResponse = authService.sendPin(apiKey, true, pinRequestDTO);
-
-                if (smsResponse instanceof Map) {
-                    Map<String, Object> responseBody = (Map<String, Object>) smsResponse;
-                    if ("MESSAGE_NOT_SENT".equals(responseBody.get("smsStatus"))) {
-                        log.error("SMS message was not sent. smsMobile: {}", smsMobile);
-
-                        if (whatsAppMobile != null) {
-                            MediaRequestDTO mediaRequestDTO = new MediaRequestDTO();
-                            mediaRequestDTO.setTo(whatsAppMobile);
-                            mediaRequestDTO.setType(WhatsappMediaType.template);
-                            mediaRequestDTO.setMessagingProduct("whatsapp");
-
-                            MediaRequestDTO.WhatsappTemplate.Language language = new MediaRequestDTO.WhatsappTemplate.Language();
-                            language.setCode("en_US");
-
-                            MediaRequestDTO.WhatsappTemplate whatsappTemplate = new MediaRequestDTO.WhatsappTemplate();
-                            whatsappTemplate.setLanguage(language);
-                            whatsappTemplate.setName("aionos_team_updates_1");
-
-                            mediaRequestDTO.setTemplate(whatsappTemplate);
-                            // Set additional fields for mediaRequestDTO as needed
-                            String waResponse = smsService.sendWhatsAppMessage(mediaRequestDTO);
-
-                            return waResponse;
-                        }
-
-                    }
-                }
-
-                return (ResponseEntity<?>) smsResponse;
-            }
-
-            generateUrlResponseDTO.setRequestId(requestId);
-            generateUrlResponseDTO.setRedirectionUrl(newUrl);
-
-        RedisDto redisDto = new RedisDto();
-        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
-        redisService.saveDataToRedis(urlMobile,redisDto);
-        return ResponseEntity.ok(generateUrlResponseDTO);
-    }
-    */public RedisDto saveVerificationStatus(String code, String error, String errorDescription) {
+    public RedisDto saveVerificationStatus(String code, String requestId, String error, String errorDescription) {
 
         if(error != null && !"".equals(error)) {
             System.out.println("Received error in service: " + error);
             System.out.println("Received error_description in service: " + errorDescription);
+
+            RedisDto redisDto = (RedisDto) redisService.getDataFromRedis(requestId);
+            redisDto.setStatus("false");
+            redisService.saveDataToRedis(requestId, redisDto);
+
             return RedisDto.builder().errorMsg(errorDescription).status("false").build();
         }
         MultiValueMap<String,String> values = new LinkedMultiValueMap<>();
@@ -186,12 +109,12 @@ public class UserService {
                         String login_hint = (String) userBody.get("login_hint");
 
 
-                        RedisDto redisDto = (RedisDto) redisService.getDataFromRedis(login_hint);
+                        RedisDto redisDto = (RedisDto) redisService.getDataFromRedis(requestId);
                         redisDto.setStatus(status);
 
-                        redisService.saveDataToRedis(login_hint,redisDto);
+                        redisService.saveDataToRedis(requestId,redisDto);
 
-                        log.info("redis-data : {}", redisService.getDataFromRedis(login_hint));
+                        log.info("redis-data : {}", redisService.getDataFromRedis(requestId));
                         return redisDto;
                     }
                 }
@@ -209,21 +132,14 @@ public class UserService {
 
     }
 
-    /*public Object generateUrl(String urlMobile, String requestId)  {
+    public RedisDto getUserStatus(String mobileNumber, String requestId) {
+        if(redisService.getDataFromRedis(requestId) == null)
+        {
+            return RedisDto.builder().status("false").build();
+        }
+        return (RedisDto) redisService.getDataFromRedis(requestId);
 
-        GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
-
-      //  String requestId = UUID.randomUUID().toString();
-        String newUrl = url1+clientCallbackUri+"&client_id="+clientId+"&scope=openid ip:phone_verify&state="+requestId+"&login_hint="+ mobileRequestDTO.getMobileNumber();
-        generateUrlResponseDTO.setRequestId(requestId);
-        generateUrlResponseDTO.setRedirectionUrl(newUrl);
-        RedisDto redisDto = new RedisDto();
-        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
-        redisService.saveDataToRedis(urlMobile,redisDto);
-
-        return generateUrlResponseDTO;
     }
-*/
 
     private Object handleWhatsAppFallback(String whatsAppMobile) {
         MediaRequestDTO mediaRequestDTO = new MediaRequestDTO();
@@ -406,7 +322,8 @@ public class UserService {
         generateUrlResponseDTO.setRequestId(requestId);
         generateUrlResponseDTO.setRedirectionUrl(newUrl);
         RedisDto redisDto = RedisDto.builder().requestId(generateUrlResponseDTO.getRequestId()).build();
-        redisService.saveDataToRedis(mobileRequestDTO.getMobileNumber(),redisDto);
+        redisService.saveDataToRedis(mobileRequestDTO.getMobileNumber(), redisDto);
+        redisService.saveDataToRedis(requestId, redisDto);
 
         return generateUrlResponseDTO;
     }
