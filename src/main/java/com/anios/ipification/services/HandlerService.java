@@ -112,7 +112,7 @@ public class HandlerService {
         log.info("silent auth handler");
         GenerateUrlResponseDTO response = generateUrlService.generateUrl(silentAuthMobile,txnId);
 //        String redirectionUrl = generateUrlService.generateUrl(silentAuthMobile,txnId).getRedirectionUrl();
-
+        log.info("response in handler service"+ response);
         if(response != null)
         {
             channel.setStatus("URL GENERATED");
