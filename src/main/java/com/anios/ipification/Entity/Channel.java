@@ -1,11 +1,17 @@
 package com.anios.ipification.Entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Table(name = "channels")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Channel {
 
     @Id
@@ -27,5 +33,12 @@ public class Channel {
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "workflowId")
     private Workflow workflow;
+
+    @Column(name = "priority")
+    private int priority;
+
+    @Column(name = "txnId")
+    private String txnId;
+
 
 }

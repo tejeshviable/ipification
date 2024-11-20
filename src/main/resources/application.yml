@@ -1,12 +1,11 @@
 server:
-  port: 7035
+  port: 7040
   servlet:
-    context-path: /api/v1/ipification
-  multipart:
-    enabled: true
-    max-file-size: 500MB
-    max-request-size: 500MB
-
+    contextPath: /api/v1/ipification
+    multipart:
+      enabled: true
+      max-file-size: 500MB
+      max-request-size: 500MB
 spring:
   redis:
     host: localhost
@@ -14,31 +13,28 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:mysql://172.17.0.2:3306/ioh
+    url: jdbc:mysql://localhost:3306/ioh
     username: root
     password: admin
   jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
     hibernate:
       naming:
         physical-strategy: org.hibernate.boot.model.naming.PhysicalNamingStrategyStandardImpl
-    show-sql: true
-    format-sql: true
+        format_sql: true
+        auto_quote_keyword: false
+        dialect: org.hibernate.dialect.MySQLDialect
+
 
 url:
   redirect: https://enatfqzw3yetv.x.pipedream.net/
   clientId: 5b4dcd2613944553b42124ab6d481619
-  client-callback-uri: http://3.238.201.69:7035/api/v1/ipification/callback
-#  client-callback-uri: https://34.54.18.161.nip.io/ipification/api/v1/ipification/callback
-  # Alternate callback URI:
-  # client-callback-uri: http://localhost:8081/api/create/token
+  client-callback-uri: https://enatfqzw3yetv.x.pipedream.net/
+  #client-callback-uri: http://3.235.246.199:7035/api/v1/ipification/callback
+  #client-callback-uri: http://localhost:8081/api/create/token
   code: ip:phone_verify
   callback: https://api.stage.ipification.com/auth/realms/ipification/protocol/openid-connect/auth?response_type=code&redirect_uri=
   clientSecret: ke2T4iTUXxaNjiESYqJKpcwUrqiCDTLG
-  # Example URL with dynamic callback and client ID:
-  # {{client-callback-uri}}&client_id={{client-id}}&scope=openid ip:phone_verify&state=IOHUniqueState001&login_hint=919884824837
+  #{{client-callback-uri}}&client_id={{client-id}}&scope=openid ip:phone_verify&state=IOHUniqueState001&login_hint=919884824837
 
 feign:
   token:
@@ -51,10 +47,60 @@ feign:
     config:
       default:
         loggerLevel: FULL
+  sms:
+    url: http://3.238.201.69:7001/api/otp/
 
 infobip:
   api:
     key: b2d059315581169ed1bc034c58224c5b-11049afe-6528-4f5c-be1b-58209b28cd33
-  applicationId: EED4049FCD5F6CCF3764BCF9950E4181
-  messageId: 437F0187D517BABCF70F0F4A17B7CC22
-  from: 447491163443
+  applicationId : EED4049FCD5F6CCF3764BCF9950E4181
+  messageId : 437F0187D517BABCF70F0F4A17B7CC22
+  from : 447491163443
+
+
+sms:
+  userId: hprsms
+  password: '*i8p5E-B'
+  credentials:
+    username: hprsms
+    password: '*i8p5E-B'
+  entityId: 1001548700000010184
+  templateId: 1007165104359300614
+  template: Your application has been submitted successfully. Login with your username and password to view submitted details. For support call 1800114477 or send email to abdm@nha.gov.in ABDM,NHA
+  source: NHASMS
+  gatewayUrl: https://sms6.rmlconnect.net:8443/bulksms/bulksms?
+
+
+redis:
+  send:
+    otp:
+      data:
+        validity: 5 #minutes of redis data expiry
+    email:
+      data:
+        validity: 5
+
+
+saveTransaction:
+  redis: ${SAVETRANSACTION_REDIS}
+  time: ${SAVETRANSACTION_TIME}
+
+application:
+  topic:
+    sendVerifyOTP:
+      queue: send-otp-queue
+      group-id: send-otp-queue
+      concurrency: 6
+    auditEvent:
+      queue: audit-queue
+    otpEvent:
+      queue: otp-queue
+
+template:
+  retrieve:
+    templateId: 1007171049692834108
+    template: "OTP to access Healthcare Professional Id is {0}. This One Time Password will be valid for 10 mins\n\nRegards\nABDM, NHA"
+
+
+
+

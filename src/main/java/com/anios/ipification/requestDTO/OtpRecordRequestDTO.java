@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class VerifyPinRequestDTO {
+public class OtpRecordRequestDTO {
+        private String mobileNumber;
+        private String otp;
+    }
 
-    private String pin;
-}

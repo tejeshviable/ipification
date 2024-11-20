@@ -9,7 +9,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class VerifyPinRequestDTO {
+public class StatusResponseDTO {
 
-    private String pin;
+    private String txnId;
+    private String channel;
+    private String message;
+    private String errorMsg;
+    private String status;
+    private String errorCode;
+
 }
