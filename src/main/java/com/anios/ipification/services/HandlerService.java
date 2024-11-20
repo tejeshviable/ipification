@@ -82,6 +82,7 @@ public class HandlerService {
             whatsAppOtpService.generateWhatsappOtp(whatsAppMobile);
             updateChannel(channel, "OTP SENT");
         } catch (FeignException e) {
+            log.error("whatsapp feign error : {}", e.getMessage());
             if (handleOtpFailure(txnId, channel, e)) {
                 return StatusResponseDTO.builder().txnId(txnId)
                         .errorMsg("Failed").status("false").errorCode("1001").build();
@@ -105,6 +106,7 @@ public class HandlerService {
     }
 
     private boolean handleOtpFailure(String txnId, Channel channel, FeignException e) {
+        log.info("handleOtpFailure : {}, {}", txnId, channel.getName());
         if ((e.status()) != 200) {
             updateChannel(channel, "OTP SENDING FAILED");
             return true;

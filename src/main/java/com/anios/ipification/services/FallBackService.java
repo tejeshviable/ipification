@@ -95,6 +95,7 @@ public class FallBackService {
     }
 
     private void failedCaseHandler(String txnId, String response) throws JsonProcessingException {
+        log.info("failedCaseHandler {} : ", txnId);
         if (response != null && "Failed".equalsIgnoreCase(response)) {
             fallBack(txnId);
         }
