@@ -77,8 +77,8 @@ public class FallBackService {
 
             StatusResponseDTO response = handlerService.smsHandler(txnId,channelList.get(0));
             failedCaseHandler(txnId, response.getErrorMsg());
-            StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).channel(ChannelType.sms.name())
-                    .message("SMS Otp Sent").status("verification_pending").build();
+            StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).otpTxnId(response.getOtpTxnId()).channel(ChannelType.sms.name())
+                    .message(response.getMessage()).status("verification_pending").build();
             //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, "SMS", "SMS Otp Sent", null, "true", null);
             saveDataService.saveToRedis(statusResponseDTO, "");
             return statusResponseDTO;
