@@ -228,16 +228,16 @@ public class UserService {
                         if("false".equalsIgnoreCase(status)){
                             channel1.setStatus("AUTHENTICATION FAILED");
                             channelRepo.save(channel1);
-                            fallBackService.fallBack(requestId);
+                            return fallBackService.fallBack(requestId);
+
                         }
                     }
                 }
             }
         }
 
-        RedisDto dto = new RedisDto();
-        return dto;
-
+        return StatusResponseDTO.builder().txnId("")
+                .errorMsg("Code should not reach here").status("false").errorCode("1002").build();
     }
 
     private boolean checkError(String requestId, String error, String errorDescription) {
