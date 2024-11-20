@@ -75,7 +75,7 @@ public class UserService {
         int priority = 1;
 
         String authenticationType = (String) redisService.getDataFromRedis(clientId);
-
+        log.info("Authentication Type from cache: {} ", authenticationType);
         if(AuthenticationType.IP.name().equalsIgnoreCase(authenticationType)) {
             return authenticationViaIpification(generateUrlRequestDTO, urlMobile, smsMobile, whatsAppMobile, channels, requestId, workflow, priority);
         } else if(AuthenticationType.HE.name().equalsIgnoreCase(authenticationType)) {
@@ -176,6 +176,7 @@ public class UserService {
     public Object verificationOnCallback(String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
 
         String authenticationType = (String) redisService.getDataFromRedis(clientId);
+        log.info("Authentication Type from cache: {} ", authenticationType);
         if(AuthenticationType.IP.name().equalsIgnoreCase(authenticationType)) {
             return verificationOnCallbackViaIpification(code, requestId, error, errorDescription);        }
         else if(AuthenticationType.HE.name().equalsIgnoreCase(authenticationType)) {
