@@ -65,13 +65,13 @@ public class FallBackService {
         {
 
             StatusResponseDTO response = handlerService.whatsAppHandler(txnId,channelList.get(0));
-            failedCaseHandler(txnId, response.getErrorMsg());
+            StatusResponseDTO response1 = failedCaseHandler(txnId, response.getErrorMsg());
             log.info("fallback whatsapp : " +response);
             //StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).channel(ChannelType.whatsApp.name())
             //        .message("WhatsApp Otp Sent").status("verification_pending").build();
             //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, "WhatsApp", "WhatsApp Otp Sent", null, "true", null);
             saveDataService.saveToRedis(response, "");
-            return response;
+            return response1 == null ? response : response1;
         }
 
         else if ("sms".equalsIgnoreCase(channelList.get(0).getName()))
@@ -95,11 +95,12 @@ public class FallBackService {
         //return new StatusResponseDTO(txnId, null, null, "Code should not have reached here", "false", "1002");
     }
 
-    private void failedCaseHandler(String txnId, String response) throws JsonProcessingException {
+    private StatusResponseDTO failedCaseHandler(String txnId, String response) throws JsonProcessingException {
         log.info("failedCaseHandler txnId : {}, response : {}  ", txnId, response);
         if (response != null && "Failed".equalsIgnoreCase(response)) {
-            fallBack(txnId);
+            return fallBack(txnId);
         }
+        return null;
     }
 
 }
