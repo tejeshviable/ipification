@@ -6,6 +6,7 @@ import com.anios.ipification.Repository.OtpRepo;
 import com.anios.ipification.Repository.WorkflowRepo;
 import com.anios.ipification.feign.SmsFeign;
 import com.anios.ipification.requestDTO.TransactionDTO;
+import com.anios.ipification.responseDTO.StatusResponseDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -104,7 +105,7 @@ public class OtpVerifier {
 */
 
 
-    public Object validateOtp(TransactionDTO transactionDTO1,String txnId) throws JsonProcessingException {
+    public StatusResponseDTO validateOtp(TransactionDTO transactionDTO1, String txnId) throws JsonProcessingException {
         TransactionDTO transactionDTO = new TransactionDTO();
         transactionDTO.setOtp(transactionDTO1.getOtp());
         transactionDTO.setMessage(transactionDTO1.getMessage());
@@ -128,18 +129,26 @@ public class OtpVerifier {
 
 
         if ("Incorrect Otp".equals(message)) {
-
-            channel.setStatus("AUTHENTICATION FAILED");
-            channelRepo.save(channel);
-            fallBackService.fallBack(txnId);
-        } else {
-            channel.setStatus("AUTHENTICATED");
-            channelRepo.save(channel);
-            System.out.println("OTP validation passed or other response");
+            updateChannel(channel, "AUTHENTICATION FAILED");
+            return fallBackService.fallBack(txnId);
         }
-        return null;
+
+        updateChannel(channel, "AUTHENTICATED");
+        System.out.println("OTP validation passed or other response");
+
+        StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder()
+                .status("true")
+                .channel("sms")
+                .txnId(txnId)
+                .message(message)
+                .build();
+
+        return statusResponseDTO;
     }
 
-
+    private void updateChannel(Channel channel, String status) {
+        channel.setStatus(status);
+        channelRepo.save(channel);
+    }
 
 }

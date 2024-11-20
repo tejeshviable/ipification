@@ -6,6 +6,7 @@ import com.anios.ipification.Repository.WorkflowRepo;
 import com.anios.ipification.enums.AuthenticationStatus;
 import com.anios.ipification.requestDTO.GenerateUrlRequestDTO;
 import com.anios.ipification.requestDTO.RedisDto;
+import com.anios.ipification.responseDTO.StatusResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,13 +26,18 @@ public class SaveDataService {
         return workflow;
     }
 
-    public void saveRedisData(String status,String msg,String mobile, String requestId,String channel) {
+    public void saveRedisData(String status,String msg, String errorMsg, String mobile, String requestId, String channel) {
         RedisDto redisDto = new RedisDto();
         redisDto.setMobileNumber(mobile);
         redisDto.setMessage(msg);
         redisDto.setStatus(status);
         redisDto.setChannel(channel);
+        redisDto.setErrorMessage(errorMsg);
         redisService.saveDataToRedis(requestId, redisDto);
+    }
+
+    public void saveToRedis (StatusResponseDTO dto, String mobile) {
+        saveRedisData(dto.getStatus(), dto.getMessage(), dto.getErrorMsg(), mobile, dto.getTxnId(), dto.getChannel());
     }
 
     public void saveMobileInRedis(String urlMobile, String requestId) {

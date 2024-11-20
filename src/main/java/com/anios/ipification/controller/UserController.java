@@ -5,6 +5,7 @@ import com.anios.ipification.requestDTO.MobileRequestDTO;
 import com.anios.ipification.requestDTO.RedisDto;
 import com.anios.ipification.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping()
+@Slf4j
 public class UserController {
 
     @Autowired
@@ -20,14 +22,16 @@ public class UserController {
     @GetMapping("/callback")
     @ResponseBody
     public ResponseEntity<?> handleRedirect(
-            @RequestParam("code") String code,
-            @RequestParam("state") String state,
-            @RequestParam(value = "error", required = false) String error) throws JsonProcessingException {
+            @RequestParam(value = "code", required = false) String code,
+            @RequestParam(value = "state", required = false) String state,
+            @RequestParam(value = "error", required = false) String error,
+            @RequestParam(value = "error_description", required = false) String errorDescription) throws JsonProcessingException {
 
-        // Log the received parameters
-        System.out.println("Received code: " + code);
-        System.out.println("Received state: " + state);
-        return new ResponseEntity<>(userService.saveVerificationStatus(code,state), HttpStatus.OK);
+        log.info("Received code: {}", code);
+        log.info("Received state: {}", state);
+        log.info("Received error: {}", error);
+        log.info("Received errorDescription: {}", errorDescription);
+        return new ResponseEntity<>(userService.saveVerificationStatus(code,state, error, errorDescription), HttpStatus.OK);
     }
 
     @GetMapping(value = "/status")
@@ -37,7 +41,7 @@ public class UserController {
 
     @PostMapping("/authenticate")
     public ResponseEntity<?> authenticateUser(@RequestBody GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
-        return new ResponseEntity<>(userService.authenticateUser(generateUrlRequestDTO), HttpStatus.MOVED_TEMPORARILY);
+        return ResponseEntity.ok(userService.authenticateUser(generateUrlRequestDTO));
     }
 
 }

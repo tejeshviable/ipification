@@ -56,7 +56,7 @@ public class WhatsAppOtpService {
         whatsappMsgDTO.setType("template");
 
         WhatsappMsgDTO.Template template = new WhatsappMsgDTO.Template();
-        template.setName("aionos_dxe_auth_4");
+        template.setName("aionos_otp");
 
         WhatsappMsgDTO.Language language = new WhatsappMsgDTO.Language();
         language.setCode("en_US");

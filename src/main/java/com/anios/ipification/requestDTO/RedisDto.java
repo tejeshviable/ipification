@@ -18,15 +18,5 @@ public class RedisDto implements Serializable {
     private String status;
     private String channel;
     private String message;
-
-    //private List<Fallback> fallbackList;
-
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class Fallback{
-        private String channel;
-        private String message;
-    }
+    private String errorMessage;
 }

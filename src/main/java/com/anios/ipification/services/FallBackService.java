@@ -1,19 +1,18 @@
 package com.anios.ipification.services;
 
 import com.anios.ipification.Entity.Channel;
-import com.anios.ipification.Entity.Workflow;
 import com.anios.ipification.Repository.ChannelRepo;
 import com.anios.ipification.Repository.WorkflowRepo;
+
+import com.anios.ipification.enums.ChannelType;
 import com.anios.ipification.responseDTO.GenerateUrlResponseDTO;
+import com.anios.ipification.responseDTO.StatusResponseDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Slf4j
 @Service
@@ -31,48 +30,71 @@ public class FallBackService {
     @Autowired
     WorkflowRepo workflowRepo;
 
-    public Object fallBack(String txnId/*, String mobileNum*/) throws JsonProcessingException {
+    public StatusResponseDTO fallBack(String txnId/*, String mobileNum*/) throws JsonProcessingException {
+
         List<Channel> channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(txnId, "PENDING");
-        Channel nextCannel = channelList.get(0);
-        log.info("Next - {}", nextCannel.getName());
-        if (channelList.isEmpty()) return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("All channels failed to generate URL or send message.");
-
-//        Optional<Workflow> optionalWorkflow = workflowRepo.findByTxnId(txnId);
-
-        /*if (!optionalWorkflow.isPresent()) {
-            log.error("Workflow not found for txnId: {}", txnId);
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Workflow not found for txnId");
+        if (channelList.isEmpty()) {
+            String message = "All channels failed to generate URL or send message.";
+            StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId)
+                    .errorMsg(message).status("false").errorCode("1001").build();
+            //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, null, null, message, "false", "1001");
+            saveDataService.saveToRedis(statusResponseDTO, "");
+            return statusResponseDTO;
         }
 
-        Workflow workflow = optionalWorkflow.get();
-*/
-        if("silent_auth".equalsIgnoreCase(channelList.get(0).getName()))
+        Channel nextChannel = channelList.get(0);
+        log.info("Next - {}", nextChannel.getName());
+
+
+        if ("silent_auth".equalsIgnoreCase(channelList.get(0).getName()))
         {
             log.info("silent_auth fallback");
             GenerateUrlResponseDTO response = handlerService.silentAuthHandler(txnId,channelList.get(0));
             if (response != null || response.getRequestId().equalsIgnoreCase(txnId)) fallBack(txnId);
 
+//            failedCaseHandler(txnId, response);
+            StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).otpTxnId(txnId).channel(ChannelType.silent_auth.name())
+                    .message("Verified via silent auth").status("true").build();
+            //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, "Silent Auth", "Verified via silent auth", null, "true", null);
+            saveDataService.saveToRedis(statusResponseDTO, "");
+            return statusResponseDTO;
         }
+
         else if ("whatsapp".equalsIgnoreCase(channelList.get(0).getName()))
         {
-            log.info("whatsApp fallback");
-            String response = handlerService.whatsAppHandler(txnId,channelList.get(0));
-            if (response != null && response.equalsIgnoreCase(txnId)) fallBack(txnId);
 
+            StatusResponseDTO response = handlerService.whatsAppHandler(txnId,channelList.get(0));
+            failedCaseHandler(txnId, response.getErrorMsg());
+            StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).channel(ChannelType.whatsApp.name())
+                    .message("WhatsApp Otp Sent").status("verification_pending").build();
+            //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, "WhatsApp", "WhatsApp Otp Sent", null, "true", null);
+            saveDataService.saveToRedis(statusResponseDTO, "");
+            return statusResponseDTO;
         }
+
         else if ("sms".equalsIgnoreCase(channelList.get(0).getName()))
         {
-            log.info("sms fallback");
-            String response = handlerService.smsHandler(txnId,channelList.get(0));
-            if (response != null && response.equalsIgnoreCase(txnId)) fallBack(txnId);
-        }
-        else{
-            String msg= "User not validated via silent auth & other workflows";
-            saveDataService.saveRedisData("AUTHENTICATION_FAILED",msg,"",txnId,"");
+
+            StatusResponseDTO response = handlerService.smsHandler(txnId,channelList.get(0));
+            failedCaseHandler(txnId, response.getErrorMsg());
+            StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).channel(ChannelType.sms.name())
+                    .message("SMS Otp Sent").status("verification_pending").build();
+            //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, "SMS", "SMS Otp Sent", null, "true", null);
+            saveDataService.saveToRedis(statusResponseDTO, "");
+            return statusResponseDTO;
+
         }
 
-        return channelList;
+        return StatusResponseDTO.builder().txnId(txnId)
+                .errorMsg("Code should not have reached here").status("false").errorCode("1002").build();
+
+        //return new StatusResponseDTO(txnId, null, null, "Code should not have reached here", "false", "1002");
+    }
+
+    private void failedCaseHandler(String txnId, String response) throws JsonProcessingException {
+        if (response != null && "Failed".equalsIgnoreCase(response)) {
+            fallBack(txnId);
+        }
     }
 
 }

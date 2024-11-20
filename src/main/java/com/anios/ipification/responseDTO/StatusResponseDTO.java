@@ -1,4 +1,4 @@
-package com.anios.ipification.requestDTO;
+package com.anios.ipification.responseDTO;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
