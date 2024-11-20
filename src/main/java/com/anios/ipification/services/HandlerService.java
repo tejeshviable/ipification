@@ -67,9 +67,9 @@ public class HandlerService {
                 //return new StatusResponseDTO(txnId, null, null, "Failed", "false", "1001");
             }
         }
-        log.info("otpTxnId 70 : " + mappedObject.get("txnId").toString());
-        return StatusResponseDTO.builder().txnId(txnId).otpTxnId(mappedObject.get("txnId").toString()).channel(ChannelType.sms.name())
-                .message(mappedObject.get("message").toString()).status("verification_pending").build();
+        log.info("otpTxnId 70 : " + mappedObject.get("txnId"));
+        return StatusResponseDTO.builder().txnId(txnId).otpTxnId((String) mappedObject.get("txnId")).channel(ChannelType.sms.name())
+                .message((String) mappedObject.get("message")).status("verification_pending").build();
 
     }
 

@@ -195,9 +195,9 @@ public class UserService {
 
                         String mobile = (String) userBody.get("login_hint");
 
-                        List<Channel> channelList = new ArrayList<>();
-                        channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(requestId, "PENDING");
-                        log.info("Channel List: {}", channelList);
+//                        List<Channel> channelList = new ArrayList<>();
+//                        channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(requestId, "PENDING");
+//                        log.info("Channel List: {}", channelList);
 
                         Optional<Workflow> optionalWorkflow = workflowRepo.findByTxnId(requestId);
 
