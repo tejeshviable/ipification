@@ -16,7 +16,7 @@ public class IpificationApplication {
 
 		RedisService redisService = context.getBean(RedisService.class);
 
-		redisService.saveDataToRedis("client_id", "IP");
+		redisService.saveDataToRedis("5b4dcd2613944553b42124ab6d481619", "IP");
 	}
 
 }

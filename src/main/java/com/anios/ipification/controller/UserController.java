@@ -21,14 +21,14 @@ public class UserController {
     @GetMapping("/callback")
     @ResponseBody
     public ResponseEntity<?> handleRedirect(
-            @RequestParam(value = "clientId") String clientId,
+            @RequestParam(value = "clientId", required = false) String clientId,
             @RequestParam(value = "code", required = false) String code,
             @RequestParam(value = "state", required = false) String state,
             @RequestParam(value = "error", required = false) String error,
             @RequestParam(value = "error_description", required = false) String errorDescription) throws JsonProcessingException {
 
         log.info("Received code: {}", code);
-        log.info("Received state: {}", state);
+        log.info("Received clientId: {}", state);
         log.info("Received error: {}", error);
         log.info("Received errorDescription: {}", errorDescription);
         return new ResponseEntity<>(userService.verificationOnCallback(clientId, code,state, error, errorDescription), HttpStatus.OK);
