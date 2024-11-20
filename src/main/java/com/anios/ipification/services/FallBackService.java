@@ -34,6 +34,7 @@ public class FallBackService {
 
         List<Channel> channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(txnId, "PENDING");
         if (channelList.isEmpty()) {
+            log.info("channelList empty");
             String message = "All channels failed to generate URL or send message.";
             StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId)
                     .errorMsg(message).status("false").errorCode("1001").build();
@@ -65,6 +66,7 @@ public class FallBackService {
 
             StatusResponseDTO response = handlerService.whatsAppHandler(txnId,channelList.get(0));
             failedCaseHandler(txnId, response.getErrorMsg());
+            log.info("fallback whatsapp : " +response);
             //StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).channel(ChannelType.whatsApp.name())
             //        .message("WhatsApp Otp Sent").status("verification_pending").build();
             //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, "WhatsApp", "WhatsApp Otp Sent", null, "true", null);
@@ -77,7 +79,6 @@ public class FallBackService {
 
             StatusResponseDTO response = handlerService.smsHandler(txnId,channelList.get(0));
             failedCaseHandler(txnId, response.getErrorMsg());
-
             log.info("fallback sms : "+response);
 
             //StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).otpTxnId(response.getOtpTxnId()).channel(ChannelType.sms.name())
@@ -95,7 +96,7 @@ public class FallBackService {
     }
 
     private void failedCaseHandler(String txnId, String response) throws JsonProcessingException {
-        log.info("failedCaseHandler {} : ", txnId);
+        log.info("failedCaseHandler txnId : {}, response : {}  ", txnId, response);
         if (response != null && "Failed".equalsIgnoreCase(response)) {
             fallBack(txnId);
         }
