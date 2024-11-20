@@ -67,11 +67,12 @@ public class FallBackService {
             StatusResponseDTO response = handlerService.whatsAppHandler(txnId,channelList.get(0));
             StatusResponseDTO fallbackResponse = failedCaseHandler(txnId, response.getErrorMsg());
             log.info("fallback whatsapp : " +response);
+            StatusResponseDTO finalResponse = fallbackResponse == null ? response : fallbackResponse;
             //StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).channel(ChannelType.whatsApp.name())
             //        .message("WhatsApp Otp Sent").status("verification_pending").build();
             //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, "WhatsApp", "WhatsApp Otp Sent", null, "true", null);
-            saveDataService.saveToRedis(response, "");
-            return fallbackResponse == null ? response : fallbackResponse;
+            saveDataService.saveToRedis(finalResponse, "");
+            return finalResponse;
         }
 
         else if ("sms".equalsIgnoreCase(channelList.get(0).getName()))
@@ -80,12 +81,12 @@ public class FallBackService {
             StatusResponseDTO response = handlerService.smsHandler(txnId,channelList.get(0));
             StatusResponseDTO fallbackResponse = failedCaseHandler(txnId, response.getErrorMsg());
             log.info("fallback sms : "+response);
-
+            StatusResponseDTO finalResponse = fallbackResponse == null ? response : fallbackResponse;
             //StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).otpTxnId(response.getOtpTxnId()).channel(ChannelType.sms.name())
             //        .message(response.getMessage()).status("verification_pending").build();
             //StatusResponseDTO statusResponseDTO = new StatusResponseDTO(txnId, "SMS", "SMS Otp Sent", null, "true", null);
-            saveDataService.saveToRedis(response, "");
-            return fallbackResponse == null ? response : fallbackResponse;
+            saveDataService.saveToRedis(finalResponse, "");
+            return finalResponse;
 
         }
 

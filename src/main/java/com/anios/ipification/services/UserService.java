@@ -101,6 +101,7 @@ public class UserService {
         Channel channel = channelList.get(0);
 
         StatusResponseDTO response = null;
+        StatusResponseDTO fallbackResponse = null;
 
         if (ChannelType.silent_auth.name().equals(channel.getName())) {
             saveDataService.saveMobileInRedis(requestId, urlMobile);
@@ -116,26 +117,27 @@ public class UserService {
 
             saveDataService.saveMobileInRedis(requestId, smsMobile);
             response = handlerService.smsHandler(requestId, channel);
-            failedCaseHandler(response, requestId);
+            fallbackResponse = failedCaseHandler(response, requestId);
 
         }
         else if (ChannelType.whatsApp.name().equals(channel.getName())) {
 
             saveDataService.saveMobileInRedis(requestId, whatsAppMobile);
             response = handlerService.whatsAppHandler(requestId, channel);
-            failedCaseHandler(response, requestId);
+            fallbackResponse = failedCaseHandler(response, requestId);
 
         }
-
-        saveDataService.saveToRedis(response, "");
-        return response;
+        StatusResponseDTO finalResponse = fallbackResponse == null ? response : fallbackResponse;
+        saveDataService.saveToRedis(finalResponse, "");
+        return finalResponse;
     }
 
 
-    private void failedCaseHandler(StatusResponseDTO response, String requestId) throws JsonProcessingException {
+    private StatusResponseDTO failedCaseHandler(StatusResponseDTO response, String requestId) throws JsonProcessingException {
         if (response != null && "Failed".equalsIgnoreCase(response.getErrorMsg())) {
-            fallBackService.fallBack(requestId);
+            return fallBackService.fallBack(requestId);
         }
+        return null;
     }
 
     public GenerateUrlResponseDTO generateUrl(String mobileNumber, String txnId) {

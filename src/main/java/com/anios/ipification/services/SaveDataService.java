@@ -37,6 +37,9 @@ public class SaveDataService {
     }
 
     public void saveToRedis (StatusResponseDTO dto, String mobile) {
+        if(dto == null) {
+            return;
+        }
         saveRedisData(dto.getStatus(), dto.getMessage(), dto.getErrorMsg(), mobile, dto.getTxnId(), dto.getChannel());
     }
 
