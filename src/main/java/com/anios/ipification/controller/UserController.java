@@ -27,6 +27,7 @@ public class UserController {
             @RequestParam(value = "error", required = false) String error,
             @RequestParam(value = "error_description", required = false) String errorDescription) throws JsonProcessingException {
 
+        log.info("Received clientId: {}", clientId);
         log.info("Received code: {}", code);
         log.info("Received clientId: {}", state);
         log.info("Received error: {}", error);
