@@ -222,7 +222,7 @@ public class UserService {
                             updateChannelStatusForAuthenticated(requestId, "silent_auth");
 
                             log.info("redis-data-silent_auth-true : {}", redisService.getDataFromRedis(requestId));
-                            return redisDto;
+                            return redisService.getDataFromRedis(requestId);
                         }
 
                         if("false".equalsIgnoreCase(status)){
