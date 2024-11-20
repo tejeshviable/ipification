@@ -40,7 +40,7 @@ public class SaveDataService {
         saveRedisData(dto.getStatus(), dto.getMessage(), dto.getErrorMsg(), mobile, dto.getTxnId(), dto.getChannel());
     }
 
-    public void saveMobileInRedis(String urlMobile, String requestId) {
+    public void saveMobileInRedis(String requestId, String urlMobile) {
         RedisDto redisDto = new RedisDto();
         redisDto.setMobileNumber(urlMobile);
         redisService.saveDataToRedis(requestId, redisDto);
