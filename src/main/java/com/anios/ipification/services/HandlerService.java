@@ -4,6 +4,7 @@ import com.anios.ipification.Entity.Channel;
 import com.anios.ipification.Entity.Workflow;
 import com.anios.ipification.Repository.ChannelRepo;
 import com.anios.ipification.Repository.WorkflowRepo;
+import com.anios.ipification.responseDTO.GenerateUrlResponseDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import feign.FeignException;
 import lombok.extern.slf4j.Slf4j;
@@ -109,14 +110,14 @@ public class HandlerService {
         String silentAuthMobile = channel.getNumber();
 
         log.info("silent auth handler");
-        Object response = generateUrlService.generateUrl(silentAuthMobile,txnId);
+//        GenerateUrlResponseDTO response = generateUrlService.generateUrl(silentAuthMobile,txnId);
         String redirectionUrl = generateUrlService.generateUrl(silentAuthMobile,txnId).getRedirectionUrl();
 
         if(redirectionUrl != null)
         {
             channel.setStatus("URL GENERATED");
             channelRepo.save(channel);
-            return (String) response;
+            return redirectionUrl;
         }
         else{
                 channel.setStatus("URL NOT GENERATED");
