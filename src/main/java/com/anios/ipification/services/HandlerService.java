@@ -115,11 +115,13 @@ public class HandlerService {
         log.info("response in handler service"+ response);
         if(response != null)
         {
+            log.info("response in handler service in if"+ response);
             channel.setStatus("URL GENERATED");
             channelRepo.save(channel);
             return response;
         }
         else{
+            log.info("response in handler service in else"+ response);
                 channel.setStatus("URL NOT GENERATED");
                 channelRepo.save(channel);
 
