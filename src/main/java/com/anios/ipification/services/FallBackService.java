@@ -4,6 +4,7 @@ import com.anios.ipification.Entity.Channel;
 import com.anios.ipification.Entity.Workflow;
 import com.anios.ipification.Repository.ChannelRepo;
 import com.anios.ipification.Repository.WorkflowRepo;
+import com.anios.ipification.responseDTO.GenerateUrlResponseDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +50,8 @@ public class FallBackService {
         if("silent_auth".equalsIgnoreCase(channelList.get(0).getName()))
         {
             log.info("silent_auth fallback");
-            String response = handlerService.silentAuthHandler(txnId,channelList.get(0));
-            if (response != null || response.equalsIgnoreCase(txnId)) fallBack(txnId);
+            GenerateUrlResponseDTO response = handlerService.silentAuthHandler(txnId,channelList.get(0));
+            if (response != null || response.getRequestId().equalsIgnoreCase(txnId)) fallBack(txnId);
 
         }
         else if ("whatsapp".equalsIgnoreCase(channelList.get(0).getName()))

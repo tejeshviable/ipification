@@ -104,9 +104,9 @@ public class UserService {
 
                 saveDataService.saveMobileInRedis(requestId, urlMobile);
 
-                String response = handlerService.silentAuthHandler(requestId,channel);
+            GenerateUrlResponseDTO response = handlerService.silentAuthHandler(requestId,channel);
 
-            if (response != null && requestId.equalsIgnoreCase(response)) fallBackService.fallBack(requestId);
+            if (response != null && requestId.equalsIgnoreCase(response.getRequestId())) fallBackService.fallBack(requestId);
 
 
                 /*Object generateUrlResponse = generateUrl(urlMobile, requestId);

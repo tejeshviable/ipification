@@ -105,19 +105,19 @@ public class HandlerService {
 
     }
 
-    public String silentAuthHandler(String txnId, Channel channel) throws JsonProcessingException {
+    public GenerateUrlResponseDTO silentAuthHandler(String txnId, Channel channel) throws JsonProcessingException {
         String name = channel.getName();
         String silentAuthMobile = channel.getNumber();
 
         log.info("silent auth handler");
-//        GenerateUrlResponseDTO response = generateUrlService.generateUrl(silentAuthMobile,txnId);
-        String redirectionUrl = generateUrlService.generateUrl(silentAuthMobile,txnId).getRedirectionUrl();
+        GenerateUrlResponseDTO response = generateUrlService.generateUrl(silentAuthMobile,txnId);
+//        String redirectionUrl = generateUrlService.generateUrl(silentAuthMobile,txnId).getRedirectionUrl();
 
-        if(redirectionUrl != null)
+        if(response != null)
         {
             channel.setStatus("URL GENERATED");
             channelRepo.save(channel);
-            return redirectionUrl;
+            return response;
         }
         else{
                 channel.setStatus("URL NOT GENERATED");
@@ -132,7 +132,7 @@ public class HandlerService {
 
                 Workflow workflow = optionalWorkflow.get();
 
-                return txnId;
+                return null;
             }
 
         }
