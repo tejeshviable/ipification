@@ -197,14 +197,14 @@ public class UserService {
 
                         String mobile = (String) userBody.get("login_hint");
 
-                        /*List<Channel> channelList = new ArrayList<>();
+                        List<Channel> channelList = new ArrayList<>();
                         channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(state, "PENDING");
                         log.info("Channel List: {}", channelList.size());
-*/
                         Optional<Workflow> optionalWorkflow = workflowRepo.findByTxnId(state);
 
-                        List<Channel> channelList1 = channelRepo.findByTxnIdAndStatusOrderByPriority(state, "PENDING");
-                        Channel channel = channelList1.get(0);
+                        List<Channel> channelList1 = channelRepo.findByTxnIdAndStatusOrderByPriority(state, "URL GENERATED");
+                        Channel channel = channelList.get(0);
+                        Channel channel1 = channelList1.get(0);
 
                         if (!optionalWorkflow.isPresent()) {
                             log.error("Workflow not found for txnId: {}", state);
@@ -226,8 +226,8 @@ public class UserService {
                         }
 
                         if ("false".equalsIgnoreCase(status)) {
-                            channel.setStatus("AUTHENTICATION FAILED");
-                            channelRepo.save(channel);
+                            channel1.setStatus("AUTHENTICATION FAILED");
+                            channelRepo.save(channel1);
                             fallBackService.fallBack(state);
                         }
 
