@@ -29,7 +29,7 @@ public class UserController {
 
         log.info("Received clientId: {}", clientId);
         log.info("Received code: {}", code);
-        log.info("Received clientId: {}", state);
+        log.info("Received state: {}", state);
         log.info("Received error: {}", error);
         log.info("Received errorDescription: {}", errorDescription);
         return new ResponseEntity<>(userService.verificationOnCallback(clientId, code,state, error, errorDescription), HttpStatus.OK);
