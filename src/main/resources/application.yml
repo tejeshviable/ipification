@@ -29,7 +29,7 @@ url:
   redirect: https://enatfqzw3yetv.x.pipedream.net/
   clientId: 5b4dcd2613944553b42124ab6d481619
 #  client-callback-uri: https://enatfqzw3yetv.x.pipedream.net/
-  client-callback-uri: http://34.236.216.239:7035/api/v1/ipification/callback
+  client-callback-uri: http://34.236.216.239:7040/api/v1/ipification/callback
   #client-callback-uri: http://localhost:8081/api/create/token
   code: ip:phone_verify
   callback: https://api.stage.ipification.com/auth/realms/ipification/protocol/openid-connect/auth?response_type=code&redirect_uri=
