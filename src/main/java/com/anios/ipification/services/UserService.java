@@ -62,7 +62,6 @@ public class UserService {
     FallBackService fallBackService;
 
 
-
     public Object authenticateUser(GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
 
         String urlMobile = null, smsMobile = null, whatsAppMobile = null;
@@ -102,11 +101,16 @@ public class UserService {
 
         if (ChannelType.silent_auth.name().equals(channel.getName())) {
 
-                saveDataService.saveMobileInRedis(requestId, urlMobile);
+            saveDataService.saveMobileInRedis(requestId, urlMobile);
 
-            GenerateUrlResponseDTO response = handlerService.silentAuthHandler(requestId,channel);
+            GenerateUrlResponseDTO response = handlerService.silentAuthHandler(requestId, channel);
 
-            if (response != null && requestId.equalsIgnoreCase(response.getRequestId())) fallBackService.fallBack(requestId);
+            if (response != null && requestId.equalsIgnoreCase(response.getRequestId())) {
+                log.info("url generation success: " + redisService.getDataFromRedis(requestId));
+                return response;
+            } else {
+                fallBackService.fallBack(requestId);
+            }
 
 
                 /*Object generateUrlResponse = generateUrl(urlMobile, requestId);
@@ -117,25 +121,27 @@ public class UserService {
                 updateChannelStatus(channels, channelName, status);
                 return generateUrlResponse;*/
 
+        } else if (ChannelType.sms.name().equals(channel.getName())) {
+            saveDataService.saveMobileInRedis(requestId, smsMobile);
+
+            //List<Channel> channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(txnId, "PENDING");
+            //Channel nextCannel = channelList.get(0);
+            String response = handlerService.smsHandler(requestId, channel);
+            if (response != null && requestId.equalsIgnoreCase(response)) {
+                fallBackService.fallBack(requestId);
+            }
+
+        } else if (ChannelType.whatsApp.name().equals(channel.getName())) {
+            saveDataService.saveMobileInRedis(requestId, whatsAppMobile);
+
+            String response = handlerService.whatsAppHandler(requestId, channel);
+            if (response != null && requestId.equalsIgnoreCase(response)) {
+                fallBackService.fallBack(requestId);
+            }
+
         }
-            else if (ChannelType.sms.name().equals(channel.getName())) {
-                saveDataService.saveMobileInRedis(requestId, smsMobile);
+        return null;
 
-                //List<Channel> channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(txnId, "PENDING");
-                //Channel nextCannel = channelList.get(0);
-                String response = handlerService.smsHandler(requestId,channel);
-            if (response != null && requestId.equalsIgnoreCase(response)) fallBackService.fallBack(requestId);
-
-            }
-            else if (ChannelType.whatsApp.name().equals(channel.getName())) {
-                saveDataService.saveMobileInRedis(requestId, whatsAppMobile);
-
-                String response = handlerService.whatsAppHandler(requestId,channel);
-            if (response != null && requestId.equalsIgnoreCase(response)) fallBackService.fallBack(requestId);
-
-            }
-
-        return ResponseEntity.ok("Initiated");
     }
 
     /*public GenerateUrlResponseDTO generateUrl(String mobileNumber, String txnId) {
@@ -161,7 +167,6 @@ public class UserService {
             }
         }
     }
-
 
 
     public Object saveVerificationStatus(String code, String state) throws JsonProcessingException {
@@ -208,11 +213,11 @@ public class UserService {
 
                         Workflow workflow = optionalWorkflow.get();
 
-                        if("true".equalsIgnoreCase(status)){
+                        if ("true".equalsIgnoreCase(status)) {
 
-                            saveDataService.saveRedisData(status,"Authenticated",login_hint,state,"silent_auth");
+                            saveDataService.saveRedisData(status, "Authenticated", login_hint, state, "silent_auth");
 
-                            saveDataService.setfinalWorkflow(workflow, "silent_auth",true);
+                            saveDataService.setfinalWorkflow(workflow, "silent_auth", true);
 
                             updateChannelStatusForAuthenticated(state, "silent_auth");
 
@@ -220,7 +225,7 @@ public class UserService {
                             return redisDto;
                         }
 
-                        if("false".equalsIgnoreCase(status)){
+                        if ("false".equalsIgnoreCase(status)) {
                             channel.setStatus("AUTHENTICATION FAILED");
                             channelRepo.save(channel);
                             fallBackService.fallBack(state);
