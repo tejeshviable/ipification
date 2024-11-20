@@ -28,8 +28,8 @@ public class GenerateUrlService {
         GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
 
 
-        String newUrl = url1 + clientCallbackUri + "&client_id=" + clientId + "&scope=openid ip:phone_verify&state=" + txnId + "&login_hint=" + mobileNumber;
-        //String newUrl=null;
+//        String newUrl = url1 + clientCallbackUri + "&client_id=" + clientId + "&scope=openid ip:phone_verify&state=" + txnId + "&login_hint=" + mobileNumber;
+        String newUrl=null;
         log.info("url generated : {} ",newUrl);
         generateUrlResponseDTO.setRequestId(txnId);
         generateUrlResponseDTO.setRedirectionUrl(newUrl);

@@ -78,7 +78,7 @@ public class FallBackService {
             StatusResponseDTO response = handlerService.smsHandler(txnId,channelList.get(0));
             failedCaseHandler(txnId, response.getErrorMsg());
 
-            log.info("fallback sms : "+response.getMessage());
+            log.info("fallback sms : "+response);
 
             StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder().txnId(txnId).otpTxnId(response.getOtpTxnId()).channel(ChannelType.sms.name())
                     .message(response.getMessage()).status("verification_pending").build();
