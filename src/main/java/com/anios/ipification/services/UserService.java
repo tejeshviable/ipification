@@ -202,10 +202,11 @@ public class UserService {
                         Optional<Workflow> optionalWorkflow = workflowRepo.findByTxnId(requestId);
 
                         List<Channel> channelList1 = channelRepo.findByTxnIdAndStatusOrderByPriority(requestId, "URL GENERATED");
-                        Channel channel = channelList.get(0);
+//                        Channel channel = channelList.get(0);
                         Channel channel1 = channelList1.get(0);
 
-                        if (!optionalWorkflow.isPresent()) {
+
+                        if (!optionalWorkflow.isPresent() || channelList1.isEmpty() ) {
                             log.error("Workflow not found for txnId: {}", requestId);
                             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Workflow not found for txnId");
                         }
