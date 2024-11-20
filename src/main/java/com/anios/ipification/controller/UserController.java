@@ -21,7 +21,7 @@ public class UserController {
     @GetMapping("/callback")
     @ResponseBody
     public ResponseEntity<?> handleRedirect(
-            @RequestParam(value = "clientId", required = false) String clientId,
+            @RequestParam(value = "client_id", required = false) String clientId,
             @RequestParam(value = "code", required = false) String code,
             @RequestParam(value = "state", required = false) String state,
             @RequestParam(value = "error", required = false) String error,
