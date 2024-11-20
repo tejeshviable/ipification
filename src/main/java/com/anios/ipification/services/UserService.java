@@ -4,6 +4,7 @@ import com.anios.ipification.Entity.Channel;
 import com.anios.ipification.Entity.Workflow;
 import com.anios.ipification.Repository.ChannelRepo;
 import com.anios.ipification.Repository.WorkflowRepo;
+import com.anios.ipification.enums.AuthenticationType;
 import com.anios.ipification.enums.ChannelType;
 import com.anios.ipification.feign.IpificationFeign;
 import com.anios.ipification.requestDTO.GenerateUrlRequestDTO;
@@ -46,9 +47,6 @@ public class UserService {
     ChannelRepo channelRepo;
 
     @Autowired
-    NHASmsService nhaSmsService;
-
-    @Autowired
     SaveDataService saveDataService;
 
     @Value("${url.clientSecret}")
@@ -64,7 +62,7 @@ public class UserService {
     FallBackService fallBackService;
 
 
-    public Object authenticateUser(GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
+    public Object authenticateUser(String clientId, GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
 
         String urlMobile = null, smsMobile = null, whatsAppMobile = null;
 
@@ -76,6 +74,18 @@ public class UserService {
 
         int priority = 1;
 
+        String authenticationType = (String) redisService.getDataFromRedis(clientId);
+
+        if(AuthenticationType.IP.name().equalsIgnoreCase(authenticationType)) {
+            return authenticationViaIpification(generateUrlRequestDTO, urlMobile, smsMobile, whatsAppMobile, channels, requestId, workflow, priority);
+        } else if(AuthenticationType.HE.name().equalsIgnoreCase(authenticationType)) {
+            //Todo: Need to handle
+            log.info("Authentication via Header enrichment to be done");
+        }
+        return null;
+    }
+
+    private Object authenticationViaIpification(GenerateUrlRequestDTO generateUrlRequestDTO, String urlMobile, String smsMobile, String whatsAppMobile, List<Channel> channels, String requestId, Workflow workflow, int priority) throws JsonProcessingException {
         if (generateUrlRequestDTO.getWorkflow() != null && !generateUrlRequestDTO.getWorkflow().isEmpty()) {
             for (GenerateUrlRequestDTO.WorkflowItem item : generateUrlRequestDTO.getWorkflow()) {
 
@@ -112,15 +122,13 @@ public class UserService {
             } else {
                 fallBackService.fallBack(requestId);
             }
-        }
-        else if (ChannelType.sms.name().equals(channel.getName())) {
+        } else if (ChannelType.sms.name().equals(channel.getName())) {
 
             saveDataService.saveMobileInRedis(requestId, smsMobile);
             response = handlerService.smsHandler(requestId, channel);
             fallbackResponse = failedCaseHandler(response, requestId);
 
-        }
-        else if (ChannelType.whatsApp.name().equals(channel.getName())) {
+        } else if (ChannelType.whatsApp.name().equals(channel.getName())) {
 
             saveDataService.saveMobileInRedis(requestId, whatsAppMobile);
             response = handlerService.whatsAppHandler(requestId, channel);
@@ -165,8 +173,19 @@ public class UserService {
 
     }
 
-    public Object saveVerificationStatus(String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
+    public Object verificationOnCallback(String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
 
+        String authenticationType = (String) redisService.getDataFromRedis(clientId);
+        if(AuthenticationType.IP.name().equalsIgnoreCase(authenticationType)) {
+            return verificationOnCallbackViaIpification(code, requestId, error, errorDescription);        }
+        else if(AuthenticationType.HE.name().equalsIgnoreCase(authenticationType)) {
+            //Todo: Need to handle
+            log.info("verification via Header enrichment to be done");
+        }
+        return null;
+    }
+
+    private Object verificationOnCallbackViaIpification(String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
         if (checkError(requestId, error, errorDescription)) {
 //            return StatusResponseDTO.builder().errorMsg(errorDescription).status("false").build();
             return fallBackService.fallBack(requestId);
@@ -194,20 +213,10 @@ public class UserService {
                         String status = (String) userBody.get("phone_number_verified");
                         String login_hint = (String) userBody.get("login_hint");
 
-                        RedisDto redisDto = (RedisDto) redisService.getDataFromRedis(requestId);
-
-                        String mobile = (String) userBody.get("login_hint");
-
-//                        List<Channel> channelList = new ArrayList<>();
-//                        channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(requestId, "PENDING");
-//                        log.info("Channel List: {}", channelList);
-
                         Optional<Workflow> optionalWorkflow = workflowRepo.findByTxnId(requestId);
 
                         List<Channel> channelList1 = channelRepo.findByTxnIdAndStatusOrderByPriority(requestId, "URL GENERATED");
-//                        Channel channel = channelList.get(0);
                         Channel channel1 = channelList1.get(0);
-
 
                         if (!optionalWorkflow.isPresent() || channelList1.isEmpty() ) {
                             log.error("Workflow not found for txnId: {}", requestId);
@@ -217,13 +226,9 @@ public class UserService {
                         Workflow workflow = optionalWorkflow.get();
 
                         if("true".equalsIgnoreCase(status)){
-
-                            saveDataService.saveRedisData(status,"Authenticated", "", login_hint,requestId,"silent_auth");
-
+                            saveDataService.saveRedisData(status,"Authenticated", "", login_hint, requestId,"silent_auth");
                             saveDataService.setfinalWorkflow(workflow, "silent_auth",true);
-
                             updateChannelStatusForAuthenticated(requestId, "silent_auth");
-
                             log.info("redis-data-silent_auth-true : {}", redisService.getDataFromRedis(requestId));
                             return redisService.getDataFromRedis(requestId);
                         }
@@ -232,7 +237,6 @@ public class UserService {
                             channel1.setStatus("AUTHENTICATION FAILED");
                             channelRepo.save(channel1);
                             return fallBackService.fallBack(requestId);
-
                         }
                     }
                 }

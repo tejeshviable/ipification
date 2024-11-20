@@ -1,7 +1,6 @@
 package com.anios.ipification.controller;
 
 import com.anios.ipification.requestDTO.GenerateUrlRequestDTO;
-import com.anios.ipification.requestDTO.MobileRequestDTO;
 import com.anios.ipification.requestDTO.RedisDto;
 import com.anios.ipification.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,7 +30,7 @@ public class UserController {
         log.info("Received state: {}", state);
         log.info("Received error: {}", error);
         log.info("Received errorDescription: {}", errorDescription);
-        return new ResponseEntity<>(userService.saveVerificationStatus(code,state, error, errorDescription), HttpStatus.OK);
+        return new ResponseEntity<>(userService.verificationOnCallback(code,state, error, errorDescription), HttpStatus.OK);
     }
 
     @GetMapping(value = "/status/{txnId}")
@@ -40,8 +39,9 @@ public class UserController {
     }
 
     @PostMapping("/authenticate")
-    public ResponseEntity<?> authenticateUser(@RequestBody GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
-        return ResponseEntity.ok(userService.authenticateUser(generateUrlRequestDTO));
+    public ResponseEntity<?> authenticateUser(@RequestParam(value = "clientId") String clientId,
+                                              @RequestBody GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
+        return ResponseEntity.ok(userService.authenticateUser(clientId, generateUrlRequestDTO));
     }
 
 }
