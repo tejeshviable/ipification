@@ -17,8 +17,8 @@ public class UserController {
     @Autowired
     UserService userService;
 
-   // @GetMapping("/callback")
-   /* @ResponseBody
+    @GetMapping("/callback")
+    @ResponseBody
     public ResponseEntity<?> handleRedirect(
             @RequestParam("code") String code,
             @RequestParam("state") String state,
@@ -29,7 +29,6 @@ public class UserController {
         System.out.println("Received state: " + state);
         return new ResponseEntity<>(userService.saveVerificationStatus(code,state), HttpStatus.OK);
     }
-*/
 
     @GetMapping(value = "/status")
     public ResponseEntity<RedisDto> getUserStatus(@PathVariable MobileRequestDTO mobileRequestDTO){
