@@ -34,9 +34,9 @@ public class UserController {
         return new ResponseEntity<>(userService.saveVerificationStatus(code,state, error, errorDescription), HttpStatus.OK);
     }
 
-    @GetMapping(value = "/status")
-    public ResponseEntity<RedisDto> getUserStatus(@PathVariable MobileRequestDTO mobileRequestDTO){
-        return new ResponseEntity<>(userService.getUserStatus(mobileRequestDTO.getMobileNumber()),HttpStatus.OK);
+    @GetMapping(value = "/status/{txnId}")
+    public ResponseEntity<RedisDto> getUserStatus(@PathVariable("txnId") String txnId){
+        return new ResponseEntity<>(userService.getUserStatus(txnId),HttpStatus.OK);
     }
 
     @PostMapping("/authenticate")

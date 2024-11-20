@@ -26,9 +26,6 @@ public class OtpVerifier {
     WorkflowRepo workflowRepo;
 
     @Autowired
-    RedisService redisService;
-
-    @Autowired
     OtpRepo otpRepo;
 
     @Autowired
@@ -36,6 +33,9 @@ public class OtpVerifier {
 
     @Autowired
     FallBackService fallBackService;
+
+    @Autowired
+    SaveDataService saveDataService;
 
     /*public Boolean verifyWhatsappOtp(OtpRecordDTO otpRecordDTO) throws JsonProcessingException {
 
@@ -142,6 +142,10 @@ public class OtpVerifier {
                 .txnId(txnId)
                 .message(message)
                 .build();
+
+        saveDataService.saveToRedis(statusResponseDTO, transactionDTO1.getMobileNumber());
+
+
 
         return statusResponseDTO;
     }
