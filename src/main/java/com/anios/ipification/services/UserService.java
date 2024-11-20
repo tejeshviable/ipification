@@ -197,13 +197,13 @@ public class UserService {
 
                         String mobile = (String) userBody.get("login_hint");
 
-                        List<Channel> channelList = new ArrayList<>();
+                        /*List<Channel> channelList = new ArrayList<>();
                         channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(state, "PENDING");
-                        log.info("Channel List: {}", channelList);
-
+                        log.info("Channel List: {}", channelList.size());
+*/
                         Optional<Workflow> optionalWorkflow = workflowRepo.findByTxnId(state);
 
-                        List<Channel> channelList1 = channelRepo.findByTxnIdAndStatusOrderByPriority(state, "OTP SENT");
+                        List<Channel> channelList1 = channelRepo.findByTxnIdAndStatusOrderByPriority(state, "PENDING");
                         Channel channel = channelList1.get(0);
 
                         if (!optionalWorkflow.isPresent()) {
@@ -215,7 +215,7 @@ public class UserService {
 
                         if ("true".equalsIgnoreCase(status)) {
 
-                            saveDataService.saveRedisData(status, "Authenticated", login_hint, state, "silent_auth");
+                            saveDataService.saveRedisData(state, "Authenticated", login_hint,status , "silent_auth");
 
                             saveDataService.setfinalWorkflow(workflow, "silent_auth", true);
 
