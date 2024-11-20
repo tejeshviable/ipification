@@ -21,6 +21,7 @@ public class UserController {
     @GetMapping("/callback")
     @ResponseBody
     public ResponseEntity<?> handleRedirect(
+            @RequestParam(value = "clientId") String clientId,
             @RequestParam(value = "code", required = false) String code,
             @RequestParam(value = "state", required = false) String state,
             @RequestParam(value = "error", required = false) String error,
@@ -30,7 +31,7 @@ public class UserController {
         log.info("Received state: {}", state);
         log.info("Received error: {}", error);
         log.info("Received errorDescription: {}", errorDescription);
-        return new ResponseEntity<>(userService.verificationOnCallback(code,state, error, errorDescription), HttpStatus.OK);
+        return new ResponseEntity<>(userService.verificationOnCallback(clientId, code,state, error, errorDescription), HttpStatus.OK);
     }
 
     @GetMapping(value = "/status/{txnId}")
