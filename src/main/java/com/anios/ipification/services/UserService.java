@@ -166,9 +166,10 @@ public class UserService {
     public Object saveVerificationStatus(String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
 
         if (checkError(requestId, error, errorDescription)) {
-            return StatusResponseDTO.builder().errorMsg(errorDescription).status("false").build();
+//            return StatusResponseDTO.builder().errorMsg(errorDescription).status("false").build();
+            return fallBackService.fallBack(requestId);
         }
-        
+
         MultiValueMap<String, String> values = new LinkedMultiValueMap<>();
 
         addValues(code, values);
