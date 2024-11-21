@@ -4,11 +4,14 @@ import com.anios.ipification.requestDTO.GenerateUrlRequestDTO;
 import com.anios.ipification.requestDTO.RedisDto;
 import com.anios.ipification.services.UserService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Enumeration;
 
 @RestController
 @RequestMapping()
@@ -26,7 +29,15 @@ public class UserController {
             @RequestParam(value = "state", required = false) String state,
             @RequestParam(value = "error", required = false) String error,
             @RequestParam(value = "error_description", required = false) String errorDescription,
-            @RequestHeader(value = "client_id", required = false) String clientIdHeader) throws JsonProcessingException {
+            @RequestHeader(value = "client_id", required = false) String clientIdHeader,
+            HttpServletRequest request) throws JsonProcessingException {
+
+        Enumeration<String> headerNames = request.getHeaderNames();
+        log.info("Received Headers:");
+        while (headerNames.hasMoreElements()) {
+            String headerName = headerNames.nextElement();
+            log.info("{}: {}", headerName, request.getHeader(headerName));
+        }
 
         log.info("Received clientId: {}", clientId);
         log.info("Received clientIdHeader: {}", clientIdHeader);
