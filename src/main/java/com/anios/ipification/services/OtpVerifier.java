@@ -59,6 +59,10 @@ public class OtpVerifier {
                     .txnId(txnId)
                     .message("AUTHENTICATION FAILED")
                     .build();
+
+            saveDataService.saveToRedis(statusFailureResponseDTO, transactionDTO1.getMobileNumber());
+
+
             return statusFailureResponseDTO;
         }
 
