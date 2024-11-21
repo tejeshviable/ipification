@@ -24,33 +24,32 @@ public class UserController {
     @GetMapping("/callback")
     @ResponseBody
     public ResponseEntity<?> handleRedirect(
-            @RequestParam(value = "client_id", required = false) String clientId,
+//            @RequestParam(value = "client_id", required = false) String clientId,
             @RequestParam(value = "code", required = false) String code,
             @RequestParam(value = "state", required = false) String state,
             @RequestParam(value = "error", required = false) String error,
             @RequestParam(value = "error_description", required = false) String errorDescription,
-            @RequestHeader(value = "client_id", required = false) String clientIdHeader,
+//            @RequestHeader(value = "client_id", required = false) String clientIdHeader,
             HttpServletRequest request) throws JsonProcessingException {
 
-        Enumeration<String> headerNames = request.getHeaderNames();
-        log.info("Received Headers:");
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            log.info("{}: {}", headerName, request.getHeader(headerName));
+        String referer = request.getHeader("Referer");
+        System.out.println("Referer: " + referer);
+        String clientId = null;
+        if (referer != null && referer.contains("client_id")) {
+            clientId = referer.split("client_id=")[1].split("&")[0];
         }
 
         log.info("Received clientId: {}", clientId);
-        log.info("Received clientIdHeader: {}", clientIdHeader);
         log.info("Received code: {}", code);
         log.info("Received state: {}", state);
         log.info("Received error: {}", error);
         log.info("Received errorDescription: {}", errorDescription);
-        return new ResponseEntity<>(userService.verificationOnCallback(clientId, code,state, error, errorDescription), HttpStatus.OK);
+        return new ResponseEntity<>(userService.verificationOnCallback(clientId, code, state, error, errorDescription), HttpStatus.OK);
     }
 
     @GetMapping(value = "/status/{txnId}")
-    public ResponseEntity<RedisDto> getUserStatus(@PathVariable("txnId") String txnId){
-        return new ResponseEntity<>(userService.getUserStatus(txnId),HttpStatus.OK);
+    public ResponseEntity<RedisDto> getUserStatus(@PathVariable("txnId") String txnId) {
+        return new ResponseEntity<>(userService.getUserStatus(txnId), HttpStatus.OK);
     }
 
     @PostMapping("/authenticate")
