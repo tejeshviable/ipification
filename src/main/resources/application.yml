@@ -13,8 +13,8 @@ spring:
   main:
     allow-bean-definition-overriding: true
   datasource:
-    url: jdbc:mysql://172.17.0.2:3306/ioh
-    #url: jdbc:mysql://localhost:3306/ioh
+    #url: jdbc:mysql://172.17.0.2:3306/ioh
+    url: jdbc:mysql://localhost:3306/ioh
     username: root
     password: admin
   jpa:

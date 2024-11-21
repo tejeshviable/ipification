@@ -91,7 +91,7 @@ public class HandlerService {
         } catch (Exception e) {
             log.info("Exception catched"+e.getMessage());
         }
-        return StatusResponseDTO.builder().txnId(txnId).channel(ChannelType.whatsApp.name())
+        return StatusResponseDTO.builder().txnId(txnId).otpTxnId("whatsapp"+whatsAppMobile).channel(ChannelType.whatsApp.name())
                 .message("WhatsApp Otp Sent").status("verification_pending").build();
 
         //return new StatusResponseDTO(txnId, "WhatsApp", "WhatsApp Otp Sent", null, "verification_pending", null);

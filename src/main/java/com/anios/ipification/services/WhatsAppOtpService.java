@@ -12,6 +12,8 @@ import com.anios.ipification.requestDTO.OtpRecordRequestDTO;
 
 import com.anios.ipification.requestDTO.WhatsappMsgDTO;
 import com.anios.ipification.responseDTO.OtpResponseDTO;
+import com.anios.ipification.responseDTO.StatusResponseDTO;
+import com.anios.ipification.util.IpificationUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
+import java.util.*;
 
 
 @Service
@@ -39,6 +38,12 @@ public class WhatsAppOtpService {
     @Autowired
     ChannelRepo channelRepo;
 
+    @Autowired
+    SaveDataService saveDataService;
+
+    @Autowired
+    RedisService redisService;
+
     public ResponseEntity<?> generateWhatsappOtp(String mobileNo) throws JsonProcessingException {
         Optional<OtpRecord> existingRecord = otpRepo.findById(mobileNo);
         if (existingRecord.isPresent()) {
@@ -48,7 +53,9 @@ public class WhatsAppOtpService {
         OtpRecord record = new OtpRecord();
         record.setOtp(generateRandomOtp());
         record.setMobileNumber(mobileNo);
-        otpRepo.save(record);
+//        otpRepo.save(record);
+
+        redisService.saveDataToRedis("whatsapp"+mobileNo, record.getOtp());
         WhatsappMsgDTO whatsappMsgDTO = new WhatsappMsgDTO();
         whatsappMsgDTO.setMessaging_product("whatsapp");
         whatsappMsgDTO.setTo(mobileNo);
@@ -85,37 +92,52 @@ public class WhatsAppOtpService {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonString = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(whatsappMsgDTO);
         log.info(jsonString);
+//        Object response = whatsappFeign.generateWhatsappOtp(whatsappMsgDTO);
+//        Map<String, Object> mappedObject = IpificationUtil.mapObject(response).get();
+//        String txnId = mappedObject.get();
         return whatsappFeign.generateWhatsappOtp(whatsappMsgDTO);
     }
 
 
 
-    public OtpResponseDTO verifyWhatsappOtp(OtpRecordRequestDTO otpRecordRequestDTO) {
+    public StatusResponseDTO verifyWhatsappOtp(OtpRecordRequestDTO otpRecordRequestDTO) {
         String mobileNumber = otpRecordRequestDTO.getMobileNumber();
         List<OtpRecord> otpRecords = otpRepo.findAll();
-        OtpRecord otpRecord = otpRepo.findByMobileNumber(mobileNumber);
-        if (otpRecord != null) {
-            String otp = otpRecord.getOtp();
+//        OtpRecord otpRecord = otpRepo.findByMobileNumber(mobileNumber);
+//        if (otpRecord != null) {
+//            String otp = otpRecord.getOtp();
+        String otp = (String) redisService.getDataFromRedis("whatsapp"+mobileNumber);
             if (otp.equalsIgnoreCase(otpRecordRequestDTO.getOtp())) {
                 otpRepo.deleteById(mobileNumber);
-                return OtpResponseDTO.builder()
-                        .mobileNumber(otpRecord.getMobileNumber())
-                        .status(true)
+
+                StatusResponseDTO statusResponseDTO = StatusResponseDTO.builder()
+                        .status("true")
+                        .channel("whatsApp")
+                        .txnId(otpRecordRequestDTO.getTxnId())
+                        .otpTxnId("whatsapp"+mobileNumber)
+                        .message("Authentication successful")
                         .build();
+
+                saveDataService.saveToRedis(statusResponseDTO, otpRecordRequestDTO.getMobileNumber());
+                return statusResponseDTO;
             } else {
-                return OtpResponseDTO.builder()
-                        .mobileNumber(otpRecord.getMobileNumber())
-                        .status(false)
-                        .errorMessage("Invalid OTP")
+                StatusResponseDTO response = StatusResponseDTO.builder()
+                        .status("false")
+                        .channel("whatsApp")
+                        .txnId(otpRecordRequestDTO.getTxnId())
+                        .otpTxnId("whatsapp"+mobileNumber)
+                        .message("Authentication failed")
                         .build();
+                saveDataService.saveToRedis(response, otpRecordRequestDTO.getMobileNumber());
+                return response;
 
             }
-        }
+//        }
 
-        return OtpResponseDTO.builder()
-                .status(false)
-                .errorMessage("Invalid OTP")
-                .build();
+//        return OtpResponseDTO.builder()
+//                .status(false)
+//                .errorMessage("Invalid OTP")
+//                .build();
     }
 
     public static String generateRandomOtp() {

@@ -2,6 +2,7 @@ package com.anios.ipification.controller;
 
 import com.anios.ipification.requestDTO.OtpRecordRequestDTO;
 import com.anios.ipification.responseDTO.OtpResponseDTO;
+import com.anios.ipification.responseDTO.StatusResponseDTO;
 import com.anios.ipification.services.WhatsAppOtpService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,8 +22,8 @@ public class WhatsAppOtpController {
     }
 
     @PostMapping("/verify-whatsapp-otp")
-    public ResponseEntity<OtpResponseDTO> verifyWhatsappOtp(@RequestBody OtpRecordRequestDTO otpRecordRequestDTO) {
-       OtpResponseDTO otpResponse =  whatsAppOtpService.verifyWhatsappOtp(otpRecordRequestDTO);
+    public ResponseEntity<StatusResponseDTO> verifyWhatsappOtp(@RequestBody OtpRecordRequestDTO otpRecordRequestDTO) {
+        StatusResponseDTO otpResponse =  whatsAppOtpService.verifyWhatsappOtp(otpRecordRequestDTO);
        return ResponseEntity.ok(otpResponse);
     }
 

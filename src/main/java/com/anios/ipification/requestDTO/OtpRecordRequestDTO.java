@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class OtpRecordRequestDTO {
         private String mobileNumber;
         private String otp;
+        private String txnId;
     }
 
