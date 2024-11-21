@@ -21,6 +21,12 @@ public class UserController {
     @Autowired
     UserService userService;
 
+    @PostMapping("/authenticate")
+    public ResponseEntity<?> authenticateUser(@RequestParam(value = "clientId") String clientId,
+                                              @RequestBody GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
+        return ResponseEntity.ok(userService.authenticateUser(clientId, generateUrlRequestDTO));
+    }
+
     @GetMapping("/callback")
     @ResponseBody
     public ResponseEntity<?> handleRedirect(
@@ -50,12 +56,6 @@ public class UserController {
     @GetMapping(value = "/status/{txnId}")
     public ResponseEntity<RedisDto> getUserStatus(@PathVariable("txnId") String txnId) {
         return new ResponseEntity<>(userService.getUserStatus(txnId), HttpStatus.OK);
-    }
-
-    @PostMapping("/authenticate")
-    public ResponseEntity<?> authenticateUser(@RequestParam(value = "clientId") String clientId,
-                                              @RequestBody GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
-        return ResponseEntity.ok(userService.authenticateUser(clientId, generateUrlRequestDTO));
     }
 
 }

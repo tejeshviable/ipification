@@ -1,7 +1,7 @@
 server:
   port: 7040
   servlet:
-    contextPath: /api/v1/ipification
+    contextPath: /api/v1/id/auth
     multipart:
       enabled: true
       max-file-size: 500MB
@@ -57,51 +57,3 @@ infobip:
   applicationId : EED4049FCD5F6CCF3764BCF9950E4181
   messageId : 437F0187D517BABCF70F0F4A17B7CC22
   from : 447491163443
-
-
-sms:
-  userId: hprsms
-  password: '*i8p5E-B'
-  credentials:
-    username: hprsms
-    password: '*i8p5E-B'
-  entityId: 1001548700000010184
-  templateId: 1007165104359300614
-  template: Your application has been submitted successfully. Login with your username and password to view submitted details. For support call 1800114477 or send email to abdm@nha.gov.in ABDM,NHA
-  source: NHASMS
-  gatewayUrl: https://sms6.rmlconnect.net:8443/bulksms/bulksms?
-
-
-redis:
-  send:
-    otp:
-      data:
-        validity: 5 #minutes of redis data expiry
-    email:
-      data:
-        validity: 5
-
-
-saveTransaction:
-  redis: ${SAVETRANSACTION_REDIS}
-  time: ${SAVETRANSACTION_TIME}
-
-application:
-  topic:
-    sendVerifyOTP:
-      queue: send-otp-queue
-      group-id: send-otp-queue
-      concurrency: 6
-    auditEvent:
-      queue: audit-queue
-    otpEvent:
-      queue: otp-queue
-
-template:
-  retrieve:
-    templateId: 1007171049692834108
-    template: "OTP to access Healthcare Professional Id is {0}. This One Time Password will be valid for 10 mins\n\nRegards\nABDM, NHA"
-
-
-
-

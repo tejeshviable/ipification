@@ -50,13 +50,9 @@ public class HandlerService {
             Object responseBody =  sendOtpResponse.getBody();
             mappedObject = IpificationUtil.mapObject(responseBody);
             log.info("otpTxnId : " + mappedObject);
-            //Object response = nhaSmsService.sendOtp(smsMobile);
 
-            log.info("otpTxnId : " + mappedObject);
             log.info("SMS handler otp {}", responseBody);
             log.info("response " + sendOtpResponse);
-
-            log.info("SMS handler otp {}",responseBody);
 
             updateChannel(channel, "OTP SENT");
         } catch (FeignException e) {
@@ -68,7 +64,7 @@ public class HandlerService {
                 //return new StatusResponseDTO(txnId, null, null, "Failed", "false", "1001");
             }
         }
-        log.info("otpTxnId 70 : " + mappedObject.get("txnId"));
+        log.info("otpTxnId outside try-catch : " + mappedObject.get("txnId"));
         return StatusResponseDTO.builder().txnId(txnId).otpTxnId(mappedObject.get("txnId").toString()).channel(ChannelType.sms.name())
                 .message((mappedObject.get("message").toString())).status("verification_pending").build();
 

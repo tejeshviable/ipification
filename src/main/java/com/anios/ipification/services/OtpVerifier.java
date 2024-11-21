@@ -23,87 +23,11 @@ public class OtpVerifier {
     @Autowired
     ChannelRepo channelRepo;
     @Autowired
-    WorkflowRepo workflowRepo;
-
-    @Autowired
-    OtpRepo otpRepo;
-
-    @Autowired
     SmsFeign smsFeign;
-
     @Autowired
     FallBackService fallBackService;
-
     @Autowired
     SaveDataService saveDataService;
-
-    /*public Boolean verifyWhatsappOtp(OtpRecordDTO otpRecordDTO) throws JsonProcessingException {
-
-        List<Channel> channelList = channelRepo.findByNameAndStatusNotAndNumber("whatsApp", "AUTHENTICATED",otpRecordDTO.getRequestId());
-
-        Channel lastChannel = channelList.get(channelList.size() - 1);
-
-        String lastTxnId = lastChannel.getTxnId();
-        //RedisDto redisDto = (RedisDto) redisService.getDataFromRedis(lastTxnId);
-
-        Optional<Workflow> optionalWorkflow = workflowRepo.findByTxnId(lastTxnId);
-
-        List<Channel> channelListPending = new ArrayList<>();
-        channelListPending = channelRepo.findByTxnIdAndStatusOrderByPriority(lastTxnId, "PENDING");
-
-        String requestId = otpRecordDTO.getRequestId();
-        Optional<OtpRecord> data = otpRepo.findById(requestId); //db
-        if (data.isPresent()) {// present
-            OtpRecord otpRecord = data.get(); // get
-            String otp = otpRecord.getOtp();  //otp
-            if (otp.equalsIgnoreCase(otpRecordDTO.getOtp())) {
-
-                *//*redisDto.setStatus("true");
-                redisDto.setMessage("Authentication success");
-                redisDto.setChannel("sms");
-                redisService.saveDataToRedis(lastTxnId,redisDto);
-*//*
-
-
-                if (!optionalWorkflow.isPresent()) {
-                    log.error("Workflow not found for txnId: {}", lastTxnId);
-                    return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Workflow not found for txnId").hasBody();
-                }
-
-                Workflow workflow = optionalWorkflow.get();
-
-                workflow.setFinalChannel("whatApp");
-                workflow.setStatus(true);
-                workflowRepo.save(workflow);
-
-                updateChannelStatusForAuthenticated(lastTxnId, "whatsApp");
-
-                otpRepo.deleteById(requestId);
-
-                return true;
-            } else {
-                fallBackService.fallBack(requestId);
-
-            }
-
-        }
-        return true;
-    }
-
-    private void updateChannelStatusForAuthenticated(String txnId, String channelName) {
-        Optional<Channel> channels = Optional.ofNullable(channelRepo.findByTxnIdAndName(txnId, channelName));
-
-        if (channels.isPresent()) {
-            Channel channel = channels.get();
-            channel.setStatus("AUTHENTICATED");
-            channelRepo.save(channel);
-            log.info("Updated channel status to AUTHENTICATED for txnId: {}, channel: {}", txnId, channelName);
-        } else {
-            log.warn("No channel found for txnId {} and name {}", txnId, channelName);
-        }
-    }
-*/
-
 
     public StatusResponseDTO validateOtp(TransactionDTO transactionDTO1, String txnId) throws JsonProcessingException {
         TransactionDTO transactionDTO = new TransactionDTO();
@@ -117,7 +41,6 @@ public class OtpVerifier {
         String message = null;
 
         try {
-
             Map<String, Object> responseMap = objectMapper.convertValue(response, Map.class);
             message = (String) responseMap.get("message");
         } catch (Exception e) {
@@ -130,7 +53,13 @@ public class OtpVerifier {
 
         if ("Incorrect Otp".equals(message)) {
             updateChannel(channel, "AUTHENTICATION FAILED");
-            return fallBackService.fallBack(txnId);
+            StatusResponseDTO statusFailureResponseDTO = StatusResponseDTO.builder()
+                    .status("false")
+                    .channel("sms")
+                    .txnId(txnId)
+                    .message("AUTHENTICATION FAILED")
+                    .build();
+            return statusFailureResponseDTO;
         }
 
         updateChannel(channel, "AUTHENTICATED");
@@ -144,8 +73,6 @@ public class OtpVerifier {
                 .build();
 
         saveDataService.saveToRedis(statusResponseDTO, transactionDTO1.getMobileNumber());
-
-
 
         return statusResponseDTO;
     }
