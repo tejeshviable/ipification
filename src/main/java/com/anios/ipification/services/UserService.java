@@ -4,32 +4,36 @@ import com.anios.ipification.Entity.Channel;
 import com.anios.ipification.Entity.Workflow;
 import com.anios.ipification.Repository.ChannelRepo;
 import com.anios.ipification.Repository.WorkflowRepo;
-import com.anios.ipification.enums.AuthenticationStatus;
+import com.anios.ipification.enums.AuthenticationType;
 import com.anios.ipification.enums.ChannelType;
-import com.anios.ipification.enums.WhatsappMediaType;
 import com.anios.ipification.feign.IpificationFeign;
-import com.anios.ipification.requestDTO.*;
+import com.anios.ipification.requestDTO.GenerateUrlRequestDTO;
+import com.anios.ipification.requestDTO.RedisDto;
 import com.anios.ipification.responseDTO.GenerateUrlResponseDTO;
+import com.anios.ipification.responseDTO.StatusResponseDTO;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.util.MultiValueMap;
 import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 @Slf4j
 public class UserService {
 
-    @Value("${url.redirect}")
-    String url;
+    @Autowired
+    WorkflowRepo workflowRepo;
+
+    @Autowired
+    RedisService redisService;
+
     @Value("${url.callback}")
     String url1;
 
@@ -39,354 +43,125 @@ public class UserService {
     @Value("${url.client-callback-uri}")
     String clientCallbackUri;
 
+    @Autowired
+    ChannelRepo channelRepo;
+
+    @Autowired
+    SaveDataService saveDataService;
+
     @Value("${url.clientSecret}")
     String clientSecret;
-    @Autowired
-    RedisService redisService;
 
     @Autowired
     IpificationFeign ipificationFeign;
 
     @Autowired
-    AuthService authService;
-
-    @Value("${infobip.api.key}")
-    private String apiKey;
-
-    @Value("${infobip.applicationId}")
-    private String applicationId;
-
-    @Value("${infobip.messageId}")
-    private String messageId;
-
-    @Value("${infobip.from}")
-    private String from;
+    HandlerService handlerService;
 
     @Autowired
-    SmsService smsService;
-
-    @Autowired
-    WorkflowRepo workflowRepo;
-
-    @Autowired
-    ChannelRepo channelRepo;
+    FallBackService fallBackService;
 
 
+    public Object authenticateUser(String clientId, GenerateUrlRequestDTO generateUrlRequestDTO) throws JsonProcessingException {
 
-    /*public Object generateUrl(GenerateUrlRequestDTO generateUrlRequestDTO)  {
+        String urlMobile = null, smsMobile = null, whatsAppMobile = null;
 
-        GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
-        String urlMobile = null,smsMobile = null,whatsAppMobile = null;
-        String newUrl = null;
-        if (generateUrlRequestDTO.getWorkflow() != null && !generateUrlRequestDTO.getWorkflow().isEmpty()) {
-            for (GenerateUrlRequestDTO.WorkflowItem item : generateUrlRequestDTO.getWorkflow()) {
-                log.info("Processing item with channel: {}", item.getChannel());
-                if (ChannelType.sms.name().equals(item.getChannel())) {
-                    smsMobile = item.getMobileNumberTo();
-                    log.info("smsMobile {}",smsMobile);
-                }
-                else if (ChannelType.silent_auth.name().equals(item.getChannel())) {
-                    urlMobile = item.getMobileNumberTo();
-                    log.info("urlMobile {}",urlMobile);
-                }
-                else if (ChannelType.whatsApp.name().equals(item.getChannel())) {
-                    whatsAppMobile = item.getMobileNumberTo();
-                    log.info("whatsAppMobile {}",whatsAppMobile);
-
-                }
-            }
-        }
-
-        log.info("urlMobile {}",urlMobile);
-        log.info("smsMobile {}",smsMobile);
-        log.info("whatsAppMobile {}",whatsAppMobile);
-
-        String requestId = UUID.randomUUID().toString();
-
-            newUrl = url1 + clientCallbackUri + "&client_id=" + clientId + "&scope=openid ip:phone_verify&state=" + requestId + "&login_hint=" + urlMobile;
-            if (newUrl == null || newUrl.isEmpty()) {
-                //throw new Exception("Redirection URL generation failed.");
-                PinRequestDTO pinRequestDTO = new PinRequestDTO();
-                pinRequestDTO.setTo(smsMobile);
-                pinRequestDTO.setFrom(from);
-                pinRequestDTO.setMessageId(messageId);
-                pinRequestDTO.setApplicationId(applicationId);
-
-                Object smsResponse = authService.sendPin(apiKey, true, pinRequestDTO);
-
-                if (smsResponse instanceof Map) {
-                    Map<String, Object> responseBody = (Map<String, Object>) smsResponse;
-                    if ("MESSAGE_NOT_SENT".equals(responseBody.get("smsStatus"))) {
-                        log.error("SMS message was not sent. smsMobile: {}", smsMobile);
-
-                        if (whatsAppMobile != null) {
-                            MediaRequestDTO mediaRequestDTO = new MediaRequestDTO();
-                            mediaRequestDTO.setTo(whatsAppMobile);
-                            mediaRequestDTO.setType(WhatsappMediaType.template);
-                            mediaRequestDTO.setMessagingProduct("whatsapp");
-
-                            MediaRequestDTO.WhatsappTemplate.Language language = new MediaRequestDTO.WhatsappTemplate.Language();
-                            language.setCode("en_US");
-
-                            MediaRequestDTO.WhatsappTemplate whatsappTemplate = new MediaRequestDTO.WhatsappTemplate();
-                            whatsappTemplate.setLanguage(language);
-                            whatsappTemplate.setName("aionos_team_updates_1");
-
-                            mediaRequestDTO.setTemplate(whatsappTemplate);
-                            // Set additional fields for mediaRequestDTO as needed
-                            String waResponse = smsService.sendWhatsAppMessage(mediaRequestDTO);
-
-                            return waResponse;
-                        }
-
-                    }
-                }
-
-                return (ResponseEntity<?>) smsResponse;
-            }
-
-            generateUrlResponseDTO.setRequestId(requestId);
-            generateUrlResponseDTO.setRedirectionUrl(newUrl);
-
-        RedisDto redisDto = new RedisDto();
-        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
-        redisService.saveDataToRedis(urlMobile,redisDto);
-        return ResponseEntity.ok(generateUrlResponseDTO);
-    }
-    */public RedisDto saveVerificationStatus(String code) {
-
-        MultiValueMap<String,String> values = new LinkedMultiValueMap<>();
-        values.add("code",code);
-        values.add("grant_type","authorization_code");
-        values.add("redirect_uri",clientCallbackUri);
-        values.add("client_id",clientId);
-        values.add("client_secret",clientSecret);
-
-        ResponseEntity<?> tokens =  ipificationFeign.fetchToken(values);
-
-        if(tokens.getStatusCode().is2xxSuccessful()){
-            Map<String, Object> body = (Map<String, Object>) tokens.getBody();
-
-            if (body != null && body.containsKey("access_token")) {
-                String accessToken = (String) body.get("access_token");
-                String bearerToken = "Bearer "+accessToken;
-
-                ResponseEntity<?> userInfoResponse = ipificationFeign.userDetails(bearerToken);
-                if (userInfoResponse.getStatusCode().is2xxSuccessful()) {
-                    Map<String, Object> userBody = (Map<String,Object>) userInfoResponse.getBody();
-                    if(userBody != null && userBody.containsKey("phone_number_verified")){
-                        System.out.println("Tejeshvi : {}"+ userBody);
-                        String status = (String) userBody.get("phone_number_verified");
-                        String login_hint = (String) userBody.get("login_hint");
-
-
-                        RedisDto redisDto = (RedisDto) redisService.getDataFromRedis(login_hint);
-                        redisDto.setStatus(status);
-
-                        redisService.saveDataToRedis(login_hint,redisDto);
-
-                        log.info("redis-data : {}", redisService.getDataFromRedis(login_hint));
-                        return redisDto;
-                    }
-                }
-            }
-        }
-        RedisDto dto = new RedisDto();
-        dto.setStatus("false");
-        return dto;
-    }
-
-    public RedisDto getUserStatus(String mobileNumber) {
-        RedisDto redisDto;
-        if(redisService.getDataFromRedis(mobileNumber) == null)
-        {
-            redisDto = new RedisDto();
-            redisDto.setStatus("false");
-            return redisDto;
-        }
-        return (RedisDto) redisService.getDataFromRedis(mobileNumber);
-
-    }
-
-    /*public Object generateUrl(String urlMobile, String requestId)  {
-
-        GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
-
-      //  String requestId = UUID.randomUUID().toString();
-        String newUrl = url1+clientCallbackUri+"&client_id="+clientId+"&scope=openid ip:phone_verify&state="+requestId+"&login_hint="+ mobileRequestDTO.getMobileNumber();
-        generateUrlResponseDTO.setRequestId(requestId);
-        generateUrlResponseDTO.setRedirectionUrl(newUrl);
-        RedisDto redisDto = new RedisDto();
-        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
-        redisService.saveDataToRedis(urlMobile,redisDto);
-
-        return generateUrlResponseDTO;
-    }
-*/
-
-    private Object handleWhatsAppFallback(String whatsAppMobile) {
-        MediaRequestDTO mediaRequestDTO = new MediaRequestDTO();
-        mediaRequestDTO.setTo(whatsAppMobile);
-        mediaRequestDTO.setType(WhatsappMediaType.template);
-        mediaRequestDTO.setMessagingProduct("whatsapp");
-
-        MediaRequestDTO.WhatsappTemplate.Language language = new MediaRequestDTO.WhatsappTemplate.Language();
-        language.setCode("en_US");
-
-        MediaRequestDTO.WhatsappTemplate whatsappTemplate = new MediaRequestDTO.WhatsappTemplate();
-        whatsappTemplate.setLanguage(language);
-        whatsappTemplate.setName("aionos_team_updates_1");
-
-        mediaRequestDTO.setTemplate(whatsappTemplate);
-        return smsService.sendWhatsAppMessage(mediaRequestDTO);
-    }
-
-    private Object handleSmsFallback(String smsMobile) {
-        PinRequestDTO pinRequestDTO = new PinRequestDTO();
-        pinRequestDTO.setTo(smsMobile);
-        pinRequestDTO.setFrom(from);
-        pinRequestDTO.setMessageId(messageId);
-        pinRequestDTO.setApplicationId(applicationId);
-
-        return authService.sendPin(apiKey, true, pinRequestDTO);
-    }
-
-    private String handleSilentAuth(String urlMobile, String requestId) {
-        if (urlMobile == null) return null;
-
-        String newUrl = url1 + clientCallbackUri + "&client_id=" + clientId
-                + "&scope=openid ip:phone_verify&state=" + requestId
-                + "&login_hint=" + urlMobile;
-//        String newUrl = null;
-        log.info("Generated Silent Auth URL: {}", newUrl);
-
-        return newUrl;
-    }
-
-
-    public Object authenticateUser(GenerateUrlRequestDTO generateUrlRequestDTO, boolean skipUrlGeneration)  {
-
-        GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
-        String urlMobile = null,smsMobile = null,whatsAppMobile = null;
-
-        Workflow workflow = new Workflow();
         List<Channel> channels = new ArrayList<>();
 
         String requestId = UUID.randomUUID().toString();
-        workflow.setTxnId(requestId);
-        workflow.setBrand(generateUrlRequestDTO.getBrand());
 
-        RedisDto redisDto = new RedisDto();
-        redisDto.setRequestId(generateUrlResponseDTO.getRequestId());
+        Workflow workflow = saveDataService.setWorkflowInitial(generateUrlRequestDTO, requestId);
 
+        int priority = 1;
+
+        String authenticationType = (String) redisService.getDataFromRedis(clientId);
+        log.info("Authentication Type from cache: {} ", authenticationType);
+        if(AuthenticationType.IP.name().equalsIgnoreCase(authenticationType)) {
+            return authenticationViaIpification(generateUrlRequestDTO, urlMobile, smsMobile, whatsAppMobile, channels, requestId, workflow, priority);
+        } else if(AuthenticationType.HE.name().equalsIgnoreCase(authenticationType)) {
+            //Todo: Need to handle
+            log.info("Authentication via Header enrichment to be done");
+        }
+        return null;
+    }
+
+    private Object authenticationViaIpification(GenerateUrlRequestDTO generateUrlRequestDTO, String urlMobile, String smsMobile, String whatsAppMobile, List<Channel> channels, String requestId, Workflow workflow, int priority) throws JsonProcessingException {
         if (generateUrlRequestDTO.getWorkflow() != null && !generateUrlRequestDTO.getWorkflow().isEmpty()) {
             for (GenerateUrlRequestDTO.WorkflowItem item : generateUrlRequestDTO.getWorkflow()) {
 
-                Channel channel = new Channel();
-                channel.setWorkflow(workflow);
-                channel.setName(item.getChannel());
-                channel.setNumber(item.getMobileNumberTo());
-
-                channel.setStatus(AuthenticationStatus.PENDING.name());
+                Channel channel = saveDataService.setChannels(item, workflow, requestId, priority);
 
                 log.info("Processing item with channel: {}", item.getChannel());
                 if (ChannelType.sms.name().equals(item.getChannel())) {
                     smsMobile = item.getMobileNumberTo();
-                    log.info("smsMobile {}",smsMobile);
-                }
-                else if (ChannelType.silent_auth.name().equals(item.getChannel())) {
+                } else if (ChannelType.silent_auth.name().equals(item.getChannel())) {
                     urlMobile = item.getMobileNumberTo();
-                    log.info("urlMobile {}",urlMobile);
-                }
-                else if (ChannelType.whatsApp.name().equals(item.getChannel())) {
+                } else if (ChannelType.whatsApp.name().equals(item.getChannel())) {
                     whatsAppMobile = item.getMobileNumberTo();
-                    log.info("whatsAppMobile {}",whatsAppMobile);
 
                 }
                 channels.add(channel);
+                priority++;
             }
             workflow.setChannels(channels);
             workflowRepo.save(workflow);
         }
 
-        //newUrl = url1 + clientCallbackUri + "&client_id=" + clientId + "&scope=openid ip:phone_verify&state=" + requestId + "&login_hint=" + urlMobile;
+        List<Channel> channelList = channelRepo.findByTxnIdAndStatusOrderByPriority(requestId, "PENDING");
+        Channel channel = channelList.get(0);
 
-        for(GenerateUrlRequestDTO.WorkflowItem item:generateUrlRequestDTO.getWorkflow())
-        {
-            String channelName = item.getChannel();
-            String status;
+        StatusResponseDTO response = null;
+        StatusResponseDTO fallbackResponse = null;
 
-            if(ChannelType.sms.name().equals(channelName)){
-                Object smsResponse = handleSmsFallback(smsMobile);
-                if (smsResponse instanceof Map && "MESSAGE_NOT_SENT".equals(((Map) smsResponse).get("smsStatus"))) {
-
-                    status = AuthenticationStatus.MESSAGE_NOT_SENT.name();
-                    log.info("SMS message not sent, trying next channel if available.");
-                }
-                    else{
-                    redisService.saveDataToRedis(smsMobile,redisDto);
-                        workflow.setFinalChannel("sms");
-                        workflow.setStatus(true);
-                        status = AuthenticationStatus.MESSAGE_SENT.name();
-                        workflowRepo.save(workflow);
-                        updateChannelStatus(channels, channelName, status);
-                        return smsResponse;
-                    }
+        if (ChannelType.silent_auth.name().equals(channel.getName())) {
+            saveDataService.saveMobileInRedis(requestId, urlMobile);
+            GenerateUrlResponseDTO generateUrlResponseDTO = handlerService.silentAuthHandler(requestId, channel);
+            if (generateUrlResponseDTO != null && requestId.equalsIgnoreCase(generateUrlResponseDTO.getRequestId())) {
+                log.info("url generation success: " + redisService.getDataFromRedis(requestId));
+                return generateUrlResponseDTO;
+            } else {
+                fallBackService.fallBack(requestId);
             }
-            else if (ChannelType.silent_auth.name().equals(channelName)) {
-                String url = handleSilentAuth(urlMobile, requestId);
-                if(skipUrlGeneration) {
-                    url = null;
-                }
-                if (url == null) {
-                    status = AuthenticationStatus.URL_GENERATION_FAILED.name();
-                    log.error("Silent auth URL generation failed, trying next channel if available.");
+        } else if (ChannelType.sms.name().equals(channel.getName())) {
 
-                }
-                else{
-                    redisService.saveDataToRedis(urlMobile,redisDto);
-                    workflow.setFinalChannel("silent_auth");
-                    workflow.setStatus(true);
-                    workflowRepo.save(workflow);
-                    status = AuthenticationStatus.URL_GENERATED.name();
-                    updateChannelStatus(channels, channelName, status);
-                    generateUrlResponseDTO.setRequestId(requestId);
-                    generateUrlResponseDTO.setRedirectionUrl(url);
-                    return ResponseEntity.ok(generateUrlResponseDTO);
-                }
+            saveDataService.saveMobileInRedis(requestId, smsMobile);
+            response = handlerService.smsHandler(requestId, channel);
+            fallbackResponse = failedCaseHandler(response, requestId);
 
+        } else if (ChannelType.whatsApp.name().equals(channel.getName())) {
 
-            }
-            else if (ChannelType.whatsApp.name().equals(channelName)) {
-                String waResponse = (String) handleWhatsAppFallback(whatsAppMobile);
-                if (waResponse == null || waResponse.contains("Failed to send message")) {
-                    status = AuthenticationStatus.MESSAGE_NOT_SENT.name();
-                    log.error("WhatsApp message not sent to {}, trying next channel if available.", whatsAppMobile);
-                }else {
-                    redisService.saveDataToRedis(whatsAppMobile,redisDto);
+            saveDataService.saveMobileInRedis(requestId, whatsAppMobile);
+            response = handlerService.whatsAppHandler(requestId, channel);
+            fallbackResponse = failedCaseHandler(response, requestId);
 
-                    workflow.setFinalChannel("whatsApp");
-                    workflow.setStatus(true);
-                    status = AuthenticationStatus.MESSAGE_SENT.name();
-                    workflowRepo.save(workflow);
-                    updateChannelStatus(channels, channelName, status);
-
-                    return waResponse;
-                }
-            }
-            else {
-                status = AuthenticationStatus.AUTHENTICATION_FAILED.name();
-                workflow.setStatus(false);
-                workflowRepo.save(workflow);
-            }
-
-            updateChannelStatus(channels, channelName, status);
         }
+        StatusResponseDTO finalResponse = fallbackResponse == null ? response : fallbackResponse;
+        saveDataService.saveToRedis(finalResponse, "");
+        return finalResponse;
+    }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("All channels failed to generate URL or send message.");
+
+    private StatusResponseDTO failedCaseHandler(StatusResponseDTO response, String requestId) throws JsonProcessingException {
+        if (response != null && "Failed".equalsIgnoreCase(response.getErrorMsg())) {
+            return fallBackService.fallBack(requestId);
         }
+        return null;
+    }
 
+    public GenerateUrlResponseDTO generateUrl(String mobileNumber, String txnId) {
+
+        log.info("mobile number {} , txnId {} : ", mobileNumber, txnId);
+
+        GenerateUrlResponseDTO generateUrlResponseDTO = new GenerateUrlResponseDTO();
+
+        String newUrl = url1 + clientCallbackUri + "&client_id=" + clientId + "&scope=openid ip:phone_verify&state=" + txnId + "&login_hint=" + mobileNumber;
+        generateUrlResponseDTO.setRequestId(txnId);
+        generateUrlResponseDTO.setRedirectionUrl(newUrl);
+
+        log.info("redis data in generate url : " + redisService.getDataFromRedis(txnId));
+
+        return generateUrlResponseDTO;
+    }
 
     private void updateChannelStatus(List<Channel> channels, String channelName, String status) {
         for (Channel channel : channels) {
@@ -395,6 +170,130 @@ public class UserService {
                 channelRepo.save(channel);
             }
         }
+
     }
 
+    public Object verificationOnCallback(String clientId, String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
+
+        String authenticationType = (String) redisService.getDataFromRedis(clientId);
+        log.info("Authentication Type from cache: {} ", authenticationType);
+        if(AuthenticationType.IP.name().equalsIgnoreCase(authenticationType)) {
+            return verificationOnCallbackViaIpification(code, requestId, error, errorDescription);        }
+        else if(AuthenticationType.HE.name().equalsIgnoreCase(authenticationType)) {
+            //Todo: Need to handle
+            log.info("verification via Header enrichment to be done");
+        }
+        return null;
+    }
+
+//    public Object verificationOnCallback(String clientId, String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
+//        return verificationOnCallbackViaIpification(code, requestId, error, errorDescription);
+//    }
+
+    private Object verificationOnCallbackViaIpification(String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
+        if (checkError(requestId, error, errorDescription)) {
+//            return StatusResponseDTO.builder().errorMsg(errorDescription).status("false").build();
+            return fallBackService.fallBack(requestId);
+        }
+
+        MultiValueMap<String, String> values = new LinkedMultiValueMap<>();
+
+        addValues(code, values);
+
+        ResponseEntity<?> tokens = ipificationFeign.fetchToken(values);
+
+        if (tokens.getStatusCode().is2xxSuccessful()) {
+            Map<String, Object> body = (Map<String, Object>) tokens.getBody();
+
+            if (body != null && body.containsKey("access_token")) {
+                String accessToken = (String) body.get("access_token");
+                String bearerToken = "Bearer " + accessToken;
+
+
+                ResponseEntity<?> userInfoResponse = ipificationFeign.userDetails(bearerToken);
+                if (userInfoResponse.getStatusCode().is2xxSuccessful()) {
+                    Map<String, Object> userBody = (Map<String, Object>) userInfoResponse.getBody();
+                    if (userBody != null && userBody.containsKey("phone_number_verified")) {
+                        System.out.println("Tejeshvi : {}" + userBody);
+                        String status = (String) userBody.get("phone_number_verified");
+                        String login_hint = (String) userBody.get("login_hint");
+
+                        Optional<Workflow> optionalWorkflow = workflowRepo.findByTxnId(requestId);
+
+                        List<Channel> channelList1 = channelRepo.findByTxnIdAndStatusOrderByPriority(requestId, "URL GENERATED");
+                        Channel channel1 = channelList1.get(0);
+
+                        if (!optionalWorkflow.isPresent() || channelList1.isEmpty() ) {
+                            log.error("Workflow not found for txnId: {}", requestId);
+                            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Workflow not found for txnId");
+                        }
+
+                        Workflow workflow = optionalWorkflow.get();
+
+                        if("true".equalsIgnoreCase(status)){
+                            saveDataService.saveRedisData(status,"Authenticated", "", login_hint, requestId,"silent_auth");
+                            saveDataService.setfinalWorkflow(workflow, "silent_auth",true);
+                            updateChannelStatusForAuthenticated(requestId, "silent_auth");
+                            log.info("redis-data-silent_auth-true : {}", redisService.getDataFromRedis(requestId));
+                            return redisService.getDataFromRedis(requestId);
+                        }
+
+                        if("false".equalsIgnoreCase(status)){
+                            channel1.setStatus("AUTHENTICATION FAILED");
+                            channelRepo.save(channel1);
+                            return fallBackService.fallBack(requestId);
+                        }
+                    }
+                }
+            }
+        }
+
+        return StatusResponseDTO.builder().txnId("")
+                .errorMsg("Code should not reach here").status("false").errorCode("1002").build();
+    }
+
+    private boolean checkError(String requestId, String error, String errorDescription) {
+        if(error != null && !"".equals(error)) {
+            RedisDto redisDto = (RedisDto) redisService.getDataFromRedis(requestId);
+            redisDto.setStatus("false");
+            redisDto.setErrorMessage(errorDescription);
+            redisService.saveDataToRedis(requestId, redisDto);
+            return true;
+        }
+        return false;
+    }
+
+    private void addValues(String code, MultiValueMap<String, String> values) {
+        values.add("code", code);
+        values.add("grant_type", "authorization_code");
+        values.add("redirect_uri", clientCallbackUri);
+        values.add("client_id", clientId);
+        values.add("client_secret", clientSecret);
+    }
+
+
+    private void updateChannelStatusForAuthenticated(String txnId, String channelName) {
+        Optional<Channel> channels = Optional.ofNullable(channelRepo.findByTxnIdAndName(txnId, channelName));
+
+        if (channels.isPresent()) {
+            Channel channel = channels.get();
+            channel.setStatus("AUTHENTICATED");
+            channelRepo.save(channel);
+            log.info("Updated channel status to AUTHENTICATED for txnId: {}, channel: {}", txnId, channelName);
+        } else {
+            log.warn("No channel found for txnId {} and name {}", txnId, channelName);
+        }
+    }
+
+    public RedisDto getUserStatus(String txnId) {
+        log.info("getUserStatus txnId : {}", txnId);
+        RedisDto redisDto;
+        if (redisService.getDataFromRedis(txnId) == null) {
+            redisDto = new RedisDto();
+            redisDto.setStatus("false");
+            return redisDto;
+        }
+        return (RedisDto) redisService.getDataFromRedis(txnId);
+
+    }
 }

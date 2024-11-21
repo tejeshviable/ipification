@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class VerifyPinRequestDTO {
+public class WhatsappRequestDTO {
+    public String mobileNumber;
+    public String otp;
 
-    private String pin;
 }

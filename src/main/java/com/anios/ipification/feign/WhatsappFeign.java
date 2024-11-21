@@ -1,6 +1,7 @@
 package com.anios.ipification.feign;
 
 import com.anios.ipification.requestDTO.MediaRequestDTO;
+import com.anios.ipification.requestDTO.WhatsappMsgDTO;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.MediaType;
@@ -14,4 +15,6 @@ public interface WhatsappFeign {
     @PostMapping(value = "/text", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<String> sendTextMessage(@RequestBody MediaRequestDTO mediaRequestDTO) throws JsonProcessingException;
 
+    @PostMapping(value = "/text", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> generateWhatsappOtp(@RequestBody WhatsappMsgDTO whatsappMsgDTO);
 }

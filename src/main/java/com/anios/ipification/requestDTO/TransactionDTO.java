@@ -1,25 +1,21 @@
 package com.anios.ipification.requestDTO;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class RedisDto implements Serializable {
-    //private static final long serialVersionUID = 753684517527574629L;
-    private String mobileNumber;
+public class TransactionDTO {
     private String txnId;
-    private String status;
-    private String channel;
+    private String otp;
+    private String mobileNumber;
     private String message;
-    private String errorMessage;
 }
