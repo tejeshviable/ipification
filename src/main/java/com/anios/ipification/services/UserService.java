@@ -173,7 +173,7 @@ public class UserService {
 
     }
 
-    /*public Object verificationOnCallback(String clientId, String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
+    public Object verificationOnCallback(String clientId, String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
 
         String authenticationType = (String) redisService.getDataFromRedis(clientId);
         log.info("Authentication Type from cache: {} ", authenticationType);
@@ -184,11 +184,11 @@ public class UserService {
             log.info("verification via Header enrichment to be done");
         }
         return null;
-    }*/
-
-    public Object verificationOnCallback(String clientId, String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
-        return verificationOnCallbackViaIpification(code, requestId, error, errorDescription);
     }
+
+//    public Object verificationOnCallback(String clientId, String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
+//        return verificationOnCallbackViaIpification(code, requestId, error, errorDescription);
+//    }
 
     private Object verificationOnCallbackViaIpification(String code, String requestId, String error, String errorDescription) throws JsonProcessingException {
         if (checkError(requestId, error, errorDescription)) {
