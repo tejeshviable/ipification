@@ -286,6 +286,7 @@ public class UserService {
     }
 
     public RedisDto getUserStatus(String txnId) {
+        log.info("getUserStatus txnId : {}", txnId);
         RedisDto redisDto;
         if (redisService.getDataFromRedis(txnId) == null) {
             redisDto = new RedisDto();

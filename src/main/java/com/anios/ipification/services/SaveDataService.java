@@ -33,6 +33,7 @@ public class SaveDataService {
         redisDto.setStatus(status);
         redisDto.setChannel(channel);
         redisDto.setErrorMessage(errorMsg);
+        redisDto.setTxnId(requestId);
         redisService.saveDataToRedis(requestId, redisDto);
     }
 

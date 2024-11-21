@@ -17,6 +17,7 @@ import java.util.List;
 public class RedisDto implements Serializable {
     //private static final long serialVersionUID = 753684517527574629L;
     private String mobileNumber;
+    private String txnId;
     private String status;
     private String channel;
     private String message;
