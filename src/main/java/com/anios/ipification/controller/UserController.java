@@ -25,9 +25,11 @@ public class UserController {
             @RequestParam(value = "code", required = false) String code,
             @RequestParam(value = "state", required = false) String state,
             @RequestParam(value = "error", required = false) String error,
-            @RequestParam(value = "error_description", required = false) String errorDescription) throws JsonProcessingException {
+            @RequestParam(value = "error_description", required = false) String errorDescription,
+            @RequestHeader(value = "client_id", required = false) String clientIdHeader) throws JsonProcessingException {
 
         log.info("Received clientId: {}", clientId);
+        log.info("Received clientIdHeader: {}", clientIdHeader);
         log.info("Received code: {}", code);
         log.info("Received state: {}", state);
         log.info("Received error: {}", error);
